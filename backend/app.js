@@ -9,7 +9,6 @@ import  researcherDashboardRouter from "./src/routes/researcherDashboardRoutes.j
 import forumsRouter from "./src/routes/researcherforums.js";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cors({
@@ -29,4 +28,8 @@ app.use("/api/researchers", researcherDashboardRouter);
 app.get("/", (req, res) => {
   res.send("✅ Backend is live and running successfully!");
 });
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
