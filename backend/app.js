@@ -26,5 +26,7 @@ app.use("/api/recommendations", recommendationsRouter);
 app.use("/api/researcherforums", forumsRouter);
 
 app.use("/api/researchers", researcherDashboardRouter);
-
+app.get("/", (req, res) => {
+  res.send("✅ Backend is live and running successfully!");
+});
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
