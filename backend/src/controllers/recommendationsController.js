@@ -41,11 +41,11 @@ export const getRecommendations = async (req, res) => {
 
     // ✅ --- Experts Query (from "experts" table) ---
     const expertQuery = `
-      SELECT id, name, specialization, institution, country, profile_url AS url
+      SELECT id, name, specialization, institution, country, condition,url
       FROM experts
       WHERE specialization ILIKE $1
       ${hasCountry ? "AND country ILIKE $2" : ""}
-      ORDER BY RANDOM()
+      ORDER id DESC
       LIMIT 10;
     `;
     const expertParams = hasCountry ? [conditionQuery, countryQuery] : [conditionQuery];
