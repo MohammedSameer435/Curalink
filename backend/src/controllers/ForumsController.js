@@ -38,32 +38,34 @@ export const getForumsBySpecialization = async (req, res) => {
     return res.status(500).json({ error: "Failed to load forums." });
   }
 };
-
-// ✅ Add reply to a patient forum post
 export const addForumReply = async (req, res) => {
   try {
     const { postId } = req.params;
-    let { reply_text, replier_name} = req.body;
+    let { reply_text, replier_name } = req.body;
 
-// optional auto-detection if user types signature in text
-if (!replier_name && reply_text.includes("—")) {
-  const parts = reply_text.split("—");
-  reply_text = parts[0].trim();
-  replier_name = parts[1].trim();
-}
-
+    // 🧩 Auto-extract name if written inline with "—"
+    if (!replier_name && reply_text.includes("—")) {
+      const parts = reply_text.split("—");
+      reply_text = parts[0].trim();
+      replier_name = parts[1]?.trim() || "Researcher";
+    }
 
     if (!reply_text || !replier_name) {
       return res.status(400).json({ error: "Missing reply text or replier name." });
     }
 
     const insertQuery = `
-      INSERT INTO researcher_forum_replies (post_id, reply_text, replier_name, replier_role)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO researcher_forum_replies (post_id, reply_text, replier_name)
+      VALUES ($1, $2, $3)
       RETURNING *;
     `;
-    const result = await pool.query(insertQuery, [postId, reply_text, replier_name, replier_role]);
-    return res.status(201).json({ message: "Reply added successfully.", reply: result.rows[0] });
+
+    const result = await pool.query(insertQuery, [postId, reply_text, replier_name]);
+
+    return res.status(201).json({
+      message: "Reply added successfully.",
+      reply: result.rows[0],
+    });
   } catch (err) {
     console.error("❌ Error adding reply:", err);
     return res.status(500).json({ error: "Failed to add reply." });
