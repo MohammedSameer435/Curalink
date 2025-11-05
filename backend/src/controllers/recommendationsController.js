@@ -39,9 +39,9 @@ export const getRecommendations = async (req, res) => {
     const trialParams = hasCountry ? [conditionQuery, countryQuery] : [conditionQuery];
     const trialResult = await pool.query(trialQuery, trialParams);
 
-    // ✅ --- Experts Query (Dynamic from Database) ---
+    // ✅ --- Experts Query (from "experts" table) ---
     const expertQuery = `
-      SELECT id, name, specialization, institution, country, researchgate_link AS url
+      SELECT id, name, specialization, institution, country, profile_url AS url
       FROM experts
       WHERE specialization ILIKE $1
       ${hasCountry ? "AND country ILIKE $2" : ""}
@@ -51,7 +51,7 @@ export const getRecommendations = async (req, res) => {
     const expertParams = hasCountry ? [conditionQuery, countryQuery] : [conditionQuery];
     const expertResult = await pool.query(expertQuery, expertParams);
 
-    console.log("🧑‍🔬 Experts fetched:", expertResult.rows.length);
+    console.log("🧑‍⚕️ Experts fetched:", expertResult.rows.length);
 
     // ✅ Return all three categories
     res.json({
