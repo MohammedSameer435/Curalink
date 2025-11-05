@@ -39,17 +39,16 @@ export const getRecommendations = async (req, res) => {
     const trialParams = hasCountry ? [conditionQuery, countryQuery] : [conditionQuery];
     const trialResult = await pool.query(trialQuery, trialParams);
 
-    // ✅ --- Experts Query (from "experts" table) ---
-    const expertQuery = `
-      SELECT id, name, specialization, institution, country, condition,url
-      FROM experts
-      WHERE specialization ILIKE $1
-      ${hasCountry ? "AND country ILIKE $2" : ""}
-      ORDER id DESC
-      LIMIT 10;
-    `;
-    const expertParams = hasCountry ? [conditionQuery, countryQuery] : [conditionQuery];
-    const expertResult = await pool.query(expertQuery, expertParams);
+   const expertQuery = `
+  SELECT id, name, specialization, institution, country, "condition", url
+  FROM experts
+  WHERE "condition" ILIKE $1
+  ${hasCountry ? "AND country ILIKE $2" : ""}
+  ORDER BY id DESC
+  LIMIT 10;
+`;
+const expertParams = hasCountry ? [conditionQuery, countryQuery] : [conditionQuery];
+const expertResult = await pool.query(expertQuery, expertParams);
 
     console.log("🧑‍⚕️ Experts fetched:", expertResult.rows.length);
 
