@@ -43,25 +43,19 @@ export const getForumsBySpecialization = async (req, res) => {
 export const addForumReply = async (req, res) => {
   try {
     const { postId } = req.params;
-    let { reply_text, replier_name, replier_role } = req.body;
+    let { reply_text, replier_name} = req.body;
 
-    if (!reply_text || reply_text.trim().length === 0) {
-      return res.status(400).json({ error: "Reply text cannot be empty." });
+// optional auto-detection if user types signature in text
+if (!replier_name && reply_text.includes("—")) {
+  const parts = reply_text.split("—");
+  reply_text = parts[0].trim();
+  replier_name = parts[1].trim();
+}
+
+
+    if (!reply_text || !replier_name) {
+      return res.status(400).json({ error: "Missing reply text or replier name." });
     }
-
-    // 🧩 Auto-extract name if user typed something like:
-    // "This helps recovery. — Dr. Jane Doe"
-    if (!replier_name && reply_text.includes("—")) {
-      const parts = reply_text.split("—");
-      reply_text = parts[0].trim();
-      replier_name = parts[1]?.trim() || "Researcher";
-    }
-
-    // 🧠 Default values if frontend doesn’t send them
-    replier_name = replier_name || "Researcher";
-    replier_role = replier_role || "researcher";
-
-    console.log("📝 New reply received:", { postId, reply_text, replier_name, replier_role });
 
     const insertQuery = `
       INSERT INTO researcher_forum_replies (post_id, reply_text, replier_name, replier_role)
@@ -69,11 +63,7 @@ export const addForumReply = async (req, res) => {
       RETURNING *;
     `;
     const result = await pool.query(insertQuery, [postId, reply_text, replier_name, replier_role]);
-
-    return res.status(201).json({
-      message: "Reply added successfully.",
-      reply: result.rows[0],
-    });
+    return res.status(201).json({ message: "Reply added successfully.", reply: result.rows[0] });
   } catch (err) {
     console.error("❌ Error adding reply:", err);
     return res.status(500).json({ error: "Failed to add reply." });
