@@ -1,6 +1,6 @@
 // client/src/pages/ForumPage.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { useNavigate } from "react-router-dom";
 
 export default function ForumPage() {
@@ -18,7 +18,7 @@ export default function ForumPage() {
 
   const fetchForums = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/forums");
+      const res = await api.get("/api/forums");
       setForumPosts(res.data || []);
     } catch (err) {
       console.error("Error fetching forums:", err);
@@ -30,7 +30,7 @@ export default function ForumPage() {
       return alert("Please fill Title, Content and Category.");
     }
     try {
-      await axios.post("http://localhost:5000/api/forums", newPost);
+      await api.post("/api/forums", newPost);
       setNewPost({ title: "", content: "", category: "", author_name: "" });
       fetchForums();
     } catch (err) {
@@ -51,7 +51,7 @@ export default function ForumPage() {
     }
 
     try {
-      await axios.post(`http://localhost:5000/api/forums/${postId}/replies`, {
+      await api.post(`/api/forums/${postId}/replies`, {
         reply_text,
         replier_name,
         replier_role: "researcher",

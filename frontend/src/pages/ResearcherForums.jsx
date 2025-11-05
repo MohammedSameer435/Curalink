@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 
 export default function ResearcherForums() {
   const location = useLocation();
@@ -22,8 +22,8 @@ export default function ResearcherForums() {
       }
 
       try {
-        const res = await axios.get(
-  `http://localhost:5000/api/researcherforums/${specialization}`
+        const res = await api.get(
+  `/api/researcherforums/${specialization}`
 );
 
         setForums({
@@ -50,7 +50,7 @@ export default function ResearcherForums() {
     }
 
     try {
-      await axios.post(`http://localhost:5000/api/forums/${postId}/replies`, {
+      await api.post(`/api/forums/${postId}/replies`, {
         reply_text: replyText,
         replier_name: specialization ? `Researcher (${specialization})` : "Researcher",
         replier_role: "researcher",
@@ -59,8 +59,8 @@ export default function ResearcherForums() {
       setReplyInputs((prev) => ({ ...prev, [postId]: "" }));
 
       // Refresh data
-      const res = await axios.get(
-  `http://localhost:5000/api/forums/${specialization}`
+      const res = await api.get(
+  `/api/forums/${specialization}`
 );
 
       setForums({

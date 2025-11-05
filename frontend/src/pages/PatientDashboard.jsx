@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 
 export default function PatientDashboard() {
   const location = useLocation();
@@ -34,7 +34,7 @@ export default function PatientDashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:5000/api/recommendations", {
+        const res = await api.get("/api/recommendations", {
           params: { condition, country },
         });
         setData(res.data);

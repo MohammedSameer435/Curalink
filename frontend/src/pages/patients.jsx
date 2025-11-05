@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 
 export default function PatientProfileSetup() {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function PatientProfileSetup() {
     }
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/ai/analyze", { text });
+      const res = await api.post("/api/ai/analyze", { text });
       setAiResult(res.data);
       setSelectedCondition(res.data.condition);
       setSelectedCountry(res.data.country || "");

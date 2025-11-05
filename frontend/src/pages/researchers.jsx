@@ -1,7 +1,7 @@
 // client/src/pages/ResearcherProfileSetup.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 
 export default function ResearcherProfileSetup() {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ export default function ResearcherProfileSetup() {
   useEffect(() => {
     const fetchSpecializations = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/researchers/specializations/list");
+        const res = await api.get("api/researchers/specializations/list");
         setSpecializations(res.data.specializations || []);
       } catch (err) {
         console.error("Failed to fetch specializations:", err);
@@ -51,7 +51,7 @@ export default function ResearcherProfileSetup() {
           .filter(Boolean),
       };
 
-      const res = await axios.post("http://localhost:5000/api/researchers/setup", payload);
+      const res = await api.post("/api/researchers/setup", payload);
 
       if (res.data?.researcher?.id) {
         const newId = res.data.researcher.id;

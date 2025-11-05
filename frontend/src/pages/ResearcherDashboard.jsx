@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 
 function getQueryParam(search, key) {
   try {
@@ -41,7 +41,7 @@ export default function ResearcherDashboard() {
   const ensureResearcherId = async () => {
     if (researcherId) return researcherId;
     try {
-      const res = await axios.get("http://localhost:5000/api/researchers");
+      const res = await api.get("/api/researchers");
       if (res.data && res.data.length > 0) {
         setResearcherId(res.data[0].id);
         return res.data[0].id;
@@ -66,8 +66,8 @@ export default function ResearcherDashboard() {
           setLoading(false);
           return;
         }
-        const res = await axios.get(
-          `http://localhost:5000/api/researchers/${id}/dashboard`
+        const res = await api.get(
+          `/api/researchers/${id}/dashboard`
         );
         setDashboard(res.data);
       } catch (err) {
