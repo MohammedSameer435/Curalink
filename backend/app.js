@@ -11,11 +11,26 @@ import forumsRouter from "./src/routes/researcherforums.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(express.json());
-app.use(cors({
-  origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173", 
-  credentials: true,
-}));
+const allowedOrigins = [
+  "https://curalink-1.onrender.com",  // ✅ your frontend Render URL
+  "http://localhost:5173",                   // ✅ keep for local testing
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg = `CORS policy does not allow access from origin ${origin}`;
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  })
+);
+
 
 app.use("/api/researchers", researcherRouter);
 app.use("/api/ai", aiRouter);
