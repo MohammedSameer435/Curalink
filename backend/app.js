@@ -12,10 +12,25 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
-app.use(cors({
-  origin: "https://curalink-1.onrender.com" || "http://localhost:5173", 
-  credentials: true,
-}));
+
+const allowedOrigins = [
+  "https://curalink-1.onrender.com", 
+  "http://localhost:5173",            
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (!allowedOrigins.includes(origin)) {
+        const msg = `CORS policy does not allow access from origin: ${origin}`;
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  })
+);
 
 app.use("/api/researchers", researcherRouter);
 app.use("/api/ai", aiRouter);
