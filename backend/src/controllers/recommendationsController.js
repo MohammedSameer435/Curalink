@@ -12,7 +12,6 @@ export const getRecommendations = async (req, res) => {
     const hasCountry = country && country.trim().length > 0;
     const countryQuery = hasCountry ? `%${country.trim()}%` : null;
 
-    // --- Debug logging (to check what’s actually being executed) ---
     console.log("🧠 Condition:", conditionQuery);
     console.log("🌍 Country:", countryQuery);
 
@@ -26,9 +25,6 @@ export const getRecommendations = async (req, res) => {
       LIMIT 10;
     `;
     const pubParams = hasCountry ? [conditionQuery, countryQuery] : [conditionQuery];
-    console.log("📘 PUB QUERY:", pubQuery);
-    console.log("📘 PUB PARAMS:", pubParams);
-
     const pubResult = await pool.query(pubQuery, pubParams);
 
     // --- Clinical Trials Query ---
@@ -41,45 +37,27 @@ export const getRecommendations = async (req, res) => {
       LIMIT 10;
     `;
     const trialParams = hasCountry ? [conditionQuery, countryQuery] : [conditionQuery];
-    console.log("🧪 TRIAL QUERY:", trialQuery);
-    console.log("🧪 TRIAL PARAMS:", trialParams);
-
     const trialResult = await pool.query(trialQuery, trialParams);
 
-    // --- Experts (temporary) ---
-    const experts = [
-      {
-        id: 1,
-        name: "Dr. A. Mehta",
-        specialization: condition,
-        institution: "AIIMS Delhi",
-        country: "India",
-        url: "https://aiims.edu",
-      },
-      {
-        id: 2,
-        name: "Dr. Sarah Thompson",
-        specialization: condition,
-        institution: "Harvard Medical School",
-        country: "USA",
-        url: "https://hms.harvard.edu",
-      },
-      {
-        id: 3,
-        name: "Dr. Chen Wei",
-        specialization: condition,
-        institution: "Peking Union Medical College",
-        country: "China",
-        url: "https://english.pumch.cn/",
-      },
-    ].filter((e) =>
-      hasCountry ? e.country.toLowerCase().includes(country.toLowerCase()) : true
-    );
+    // ✅ --- Experts Query (Dynamic from Database) ---
+    const expertQuery = `
+      SELECT id, name, specialization, institution, country, researchgate_link AS url
+      FROM experts
+      WHERE specialization ILIKE $1
+      ${hasCountry ? "AND country ILIKE $2" : ""}
+      ORDER BY RANDOM()
+      LIMIT 10;
+    `;
+    const expertParams = hasCountry ? [conditionQuery, countryQuery] : [conditionQuery];
+    const expertResult = await pool.query(expertQuery, expertParams);
 
+    console.log("🧑‍🔬 Experts fetched:", expertResult.rows.length);
+
+    // ✅ Return all three categories
     res.json({
       publications: pubResult.rows,
       clinical_trials: trialResult.rows,
-      experts,
+      experts: expertResult.rows,
     });
   } catch (err) {
     console.error("❌ Error fetching recommendations:", err);
