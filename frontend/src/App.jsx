@@ -19,8 +19,6 @@ export default function App() {
         <Route path="/patient-dashboard" element={<PatientDashboard />} />
         <Route path="/forums" element={<Forums />} />
         <Route path="/researcher-dashboard" element={<ResearcherDashboard />} />
-
-        {/* 👇 Add this new route for researcher forums */}
         <Route path="/researcher-forums" element={<ResearcherForums />} />
       </Routes>
     </Router>
