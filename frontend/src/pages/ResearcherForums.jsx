@@ -50,7 +50,8 @@ export default function ResearcherForums() {
     }
 
     try {
-      await api.post(`/api/forums/${postId}/replies`, {
+      await api.post(`/api/researcherforums/${postId}/replies`, {
+
         reply_text: replyText,
         replier_name: specialization ? `Researcher (${specialization})` : "Researcher",
         replier_role: "researcher",
