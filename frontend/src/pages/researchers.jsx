@@ -170,6 +170,12 @@ export default function ResearcherProfileSetup() {
         >
           {loading ? "Saving..." : "Save Profile"}
         </button>
+        <button
+  onClick={() => navigate("/login")}
+  className="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold shadow transition-all"
+>
+  🔐 Login as Researcher
+</button>
       </div>
     </div>
   );

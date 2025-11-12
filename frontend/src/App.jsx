@@ -19,8 +19,7 @@ export default function App() {
         <Route path="/researchers" element={<ResearcherProfileSetup />} />
         <Route path="/patient-dashboard" element={<PatientDashboard />} />
         <Route path="/forums" element={<Forums />} />
-        <Route path="/researcher-dashboard" element={<ResearcherDashboard />} />
-        <Route path="/select-researcher" element={<SelectResearcher />} />
+        <Route path="/researcher-dashboard" element={<ResearcherDashboard />} />        
         <Route path="/login" element={<SelectResearcher />} />
         <Route path="/researcher-forums" element={<ResearcherForums />} />
       </Routes>

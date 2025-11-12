@@ -8,7 +8,7 @@ export default function SelectResearcher() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const load = async () => {
+    const loadResearchers = async () => {
       try {
         const res = await api.get("/api/researchers");
         setResearchers(res.data);
@@ -16,27 +16,35 @@ export default function SelectResearcher() {
         console.error("Failed to load researchers:", err);
       }
     };
-    load();
+    loadResearchers();
   }, []);
 
   const handleLogin = () => {
-    if (!selected) return alert("Please choose a researcher.");
-    // Save to localStorage so dashboard can read it on refresh
+    if (!selected) {
+      alert("Please select a researcher to continue.");
+      return;
+    }
+
+    // Save the selected ID to localStorage
     localStorage.setItem("activeResearcherId", selected);
-    // Navigate to your dashboard route and pass state for immediate load
+
+    // Navigate to the dashboard and pass ID via state too
     navigate("/dashboard", { state: { researcherId: selected } });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-teal-50 p-6">
-      <div className="bg-white p-6 rounded-lg shadow max-w-md w-full">
-        <h1 className="text-xl font-bold mb-4">Sign in as researcher</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-teal-50">
+      <div className="bg-white shadow-xl p-6 rounded-xl w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold text-teal-700 mb-4">
+          Select Researcher Profile
+        </h1>
+
         <select
+          className="border p-2 rounded w-full mb-4"
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
-          className="w-full border p-2 rounded mb-4"
         >
-          <option value="">-- Select Researcher --</option>
+          <option value="">-- Choose Researcher --</option>
           {researchers.map((r) => (
             <option key={r.id} value={r.id}>
               {r.name} — {r.specialization || "General"}
@@ -44,23 +52,12 @@ export default function SelectResearcher() {
           ))}
         </select>
 
-        <div className="flex gap-2">
-          <button
-            onClick={handleLogin}
-            className="flex-1 bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700"
-          >
-            Continue
-          </button>
-          <button
-            onClick={() => {
-              localStorage.removeItem("activeResearcherId");
-              setSelected("");
-            }}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-          >
-            Clear
-          </button>
-        </div>
+        <button
+          onClick={handleLogin}
+          className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded w-full"
+        >
+          Continue
+        </button>
       </div>
     </div>
   );
