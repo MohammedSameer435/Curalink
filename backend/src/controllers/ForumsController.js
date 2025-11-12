@@ -1,4 +1,4 @@
-import { pool } from "./db/index.js";
+import { pool } from "../db/index.js";
 
 // ✅ Fetch forums related to a specialization (for researcher dashboard/forums)
 export const getForumsBySpecialization = async (req, res) => {

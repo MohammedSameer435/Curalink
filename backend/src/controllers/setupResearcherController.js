@@ -1,4 +1,4 @@
-import { pool } from "./db/index.js";
+import { pool } from "../db/index.js";
 
 // -------------------------------------------
 // Create / Setup Researcher Profile
