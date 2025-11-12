@@ -307,12 +307,42 @@ export default function ResearcherDashboard() {
         />
 
         {/* ===== COLLABORATORS ===== */}
-        <Section
-          title="🤝 Suggested Collaborators"
-          data={collaborators}
-          type="collaborators"
-          handleFavorite={handleFavorite}
-        />
+<section className="mb-12">
+  <h2 className="text-2xl font-semibold text-teal-700 mb-4">
+    🤝 Suggested Collaborators
+  </h2>
+  {collaborators.length === 0 ? (
+    <p className="text-gray-500">No collaborators matched yet.</p>
+  ) : (
+    <div className="grid md:grid-cols-2 gap-6">
+      {collaborators.map((c) => (
+        <div
+          key={c.id}
+          className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition-transform hover:-translate-y-1"
+        >
+          <h3 className="font-bold text-lg mb-1">
+            {c.name || "Unnamed Collaborator"}
+          </h3>
+          <p className="text-sm text-gray-600">
+            {c.institution} — {c.country}
+          </p>
+          <p className="text-sm text-gray-700 mt-2 leading-relaxed">
+            Common specialization: {c.specialization}
+          </p>
+          <div className="flex justify-end mt-3">
+            <button
+              onClick={() => handleFavorite("collaborators", c)}
+              className="px-3 py-1 text-sm font-medium text-rose-500 bg-rose-50 border border-rose-100 rounded-full hover:bg-rose-100 hover:scale-105 transition-all"
+            >
+              ❤️
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</section>
+
 
         {/* ===== FAVORITES ===== */}
         <FavoritesSection favorites={favorites} />
