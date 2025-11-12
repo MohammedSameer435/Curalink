@@ -17,6 +17,8 @@ export default function ResearcherDashboard() {
   const stateId = location.state?.researcherId;
   const queryId = getQueryParam(location.search, "id");
   const [researcherId, setResearcherId] = useState(stateId || queryId || null);
+  const [editing, setEditing] = useState(false);
+const [editableResearcher, setEditableResearcher] = useState(researcher);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,6 +29,25 @@ export default function ResearcherDashboard() {
     clinical_trials: [],
     collaborators: [],
   });
+
+  const handleChange = (field, value) => {
+  setEditableResearcher((prev) => ({
+    ...prev,
+    [field]: value,
+  }));
+};
+
+const handleSave = async () => {
+  try {
+    const res = await api.put(`/api/researchers/${researcher.id}`, editableResearcher);
+    setDashboard((prev) => ({ ...prev, researcher: res.data.researcher }));
+    setEditing(false);
+  } catch (err) {
+    console.error("Failed to update researcher:", err);
+    alert("Failed to save changes.");
+  }
+};
+
 
   const handleFavorite = (type, item) => {
     setFavorites((prev) => {
@@ -101,15 +122,68 @@ export default function ResearcherDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 px-6 py-10">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <header className="mb-10 text-center">
+  <div className="max-w-5xl mx-auto">
+    {/* Header */}
+    <header className="mb-10 text-center">
+      {editing ? (
+        <>
+          <input
+            className="border p-1 rounded text-lg font-bold"
+            value={editableResearcher.name || ""}
+            onChange={(e) => handleChange("name", e.target.value)}
+          />
+          <input
+            className="border p-1 rounded mt-1"
+            value={editableResearcher.specialization || ""}
+            onChange={(e) => handleChange("specialization", e.target.value)}
+          />
+          <input
+            className="border p-1 rounded mt-1"
+            value={editableResearcher.institution || ""}
+            onChange={(e) => handleChange("institution", e.target.value)}
+          />
+          <input
+            className="border p-1 rounded mt-1"
+            value={editableResearcher.country || ""}
+            onChange={(e) => handleChange("country", e.target.value)}
+          />
+          <input
+            className="border p-1 rounded mt-1 w-full"
+            value={
+              Array.isArray(editableResearcher.research_interests)
+                ? editableResearcher.research_interests.join(", ")
+                : editableResearcher.research_interests
+            }
+            onChange={(e) =>
+              handleChange(
+                "research_interests",
+                e.target.value.split(",").map((s) => s.trim())
+              )
+            }
+          />
+
+          <div className="mt-4 flex justify-center gap-2">
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setEditing(false)}
+              className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
           <h1 className="text-4xl font-extrabold text-gray-800 mb-2">
             🧬 {researcher.name}
           </h1>
           <p className="text-gray-600 text-lg">
-            {researcher.specialization} — {researcher.institution} (
-            {researcher.country})
+            {researcher.specialization} — {researcher.institution} ({researcher.country})
           </p>
           <p className="text-gray-500 mt-1 text-sm">
             Interests:{" "}
@@ -117,7 +191,6 @@ export default function ResearcherDashboard() {
               ? researcher.research_interests.join(", ")
               : researcher.research_interests}
           </p>
-
           <div className="mt-6 flex justify-center gap-4">
             <button
               onClick={() =>
@@ -137,9 +210,20 @@ export default function ResearcherDashboard() {
                 </span>
               )}
             </button>
-          </div>
-        </header>
 
+            <button
+              onClick={() => {
+                setEditableResearcher(researcher);
+                setEditing(true);
+              }}
+              className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Edit
+            </button>
+          </div>
+        </>
+      )}
+    </header>
         {/* Publications */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold text-teal-700 mb-4">

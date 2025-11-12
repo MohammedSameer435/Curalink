@@ -143,3 +143,44 @@ if (trialResult.rows.length === 0) {
     return res.status(500).json({ error: "Failed to load researcher dashboard." });
   }
 };
+
+export const updateResearcher = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, specialization, institution, country, research_interests } = req.body;
+
+    if (!id) return res.status(400).json({ error: "Researcher ID is required." });
+
+    const query = `
+      UPDATE researchers
+      SET
+        name = COALESCE($1, name),
+        specialization = COALESCE($2, specialization),
+        institution = COALESCE($3, institution),
+        country = COALESCE($4, country),
+        research_interests = COALESCE($5, research_interests)
+      WHERE id = $6
+      RETURNING *;
+    `;
+
+    const values = [
+      name,
+      specialization,
+      institution,
+      country,
+      research_interests, // Should be an array
+      id,
+    ];
+
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0)
+      return res.status(404).json({ error: "Researcher not found." });
+
+    return res.json({ researcher: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Error updating researcher:", err);
+    return res.status(500).json({ error: "Failed to update researcher." });
+  }
+};
+
