@@ -10,3 +10,12 @@ export const getSpecializations = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch specializations" });
   }
 };
+export const getResearchers= async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM researchers ORDER BY id ASC;");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching researchers:", err);
+    res.status(500).json({ error: "Failed to fetch researchers." });
+  }
+};

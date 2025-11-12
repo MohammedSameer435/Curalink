@@ -10,7 +10,7 @@ export default function SelectResearcher() {
   useEffect(() => {
     const loadResearchers = async () => {
       try {
-        const res = await api.get("/api/researchers");
+        const res = await api.get("/api/researchers/list");
         setResearchers(res.data);
       } catch (err) {
         console.error("Failed to load researchers:", err);
