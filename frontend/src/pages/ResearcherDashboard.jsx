@@ -167,30 +167,48 @@ export default function ResearcherDashboard() {
       <div className="max-w-5xl mx-auto">
         {/* ===== HEADER ===== */}
         <header className="mb-10 text-center">
-          {editing && editableResearcher ? (
-            <>
+        {editing && editableResearcher ? (
+          <div className="flex flex-col gap-4 max-w-md mx-auto">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Name</label>
               <input
-                className="border p-1 rounded text-lg font-bold"
+                className="border p-2 rounded w-full"
                 value={editableResearcher.name || ""}
                 onChange={(e) => handleChange("name", e.target.value)}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Specialization</label>
               <input
-                className="border p-1 rounded mt-1"
+                className="border p-2 rounded w-full"
                 value={editableResearcher.specialization || ""}
                 onChange={(e) => handleChange("specialization", e.target.value)}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Institution</label>
               <input
-                className="border p-1 rounded mt-1"
+                className="border p-2 rounded w-full"
                 value={editableResearcher.institution || ""}
                 onChange={(e) => handleChange("institution", e.target.value)}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Country</label>
               <input
-                className="border p-1 rounded mt-1"
+                className="border p-2 rounded w-full"
                 value={editableResearcher.country || ""}
                 onChange={(e) => handleChange("country", e.target.value)}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Research Interests</label>
               <input
-                className="border p-1 rounded mt-1 w-full"
+                className="border p-2 rounded w-full"
                 value={
                   Array.isArray(editableResearcher.research_interests)
                     ? editableResearcher.research_interests.join(", ")
@@ -203,76 +221,74 @@ export default function ResearcherDashboard() {
                   )
                 }
               />
+            </div>
 
-              <div className="mt-4 flex justify-center gap-2">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className={`px-4 py-2 rounded text-white ${
-                    saving
-                      ? "bg-teal-400 cursor-not-allowed"
-                      : "bg-teal-600 hover:bg-teal-700"
-                  }`}
-                >
-                  {saving ? "Saving..." : "Save"}
-                </button>
-                <button
-                  onClick={() => setEditing(false)}
-                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <h1 className="text-4xl font-extrabold text-gray-800 mb-2">
-                🧬 {researcher.name}
-              </h1>
-              <p className="text-gray-600 text-lg">
-                {researcher.specialization} — {researcher.institution} (
-                {researcher.country})
-              </p>
-              <p className="text-gray-500 mt-1 text-sm">
-                Interests:{" "}
-                {Array.isArray(researcher.research_interests)
-                  ? researcher.research_interests.join(", ")
-                  : researcher.research_interests}
-              </p>
+            <div className="flex justify-center gap-2 mt-4">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className={`px-4 py-2 rounded text-white ${
+                  saving ? "bg-teal-400 cursor-not-allowed" : "bg-teal-600 hover:bg-teal-700"
+                }`}
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <h1 className="text-4xl font-extrabold text-gray-800 mb-2">
+              🧬 {researcher.name}
+            </h1>
+            <p className="text-gray-600 text-lg">
+              {researcher.specialization} — {researcher.institution} ({researcher.country})
+            </p>
+            <p className="text-gray-500 mt-1 text-sm">
+              Interests:{" "}
+              {Array.isArray(researcher.research_interests)
+                ? researcher.research_interests.join(", ")
+                : researcher.research_interests}
+            </p>
 
-              <div className="mt-6 flex justify-center gap-4">
-                <button
-                  onClick={() =>
-                    navigate("/researcher-forums", {
-                      state: {
-                        researcherId: researcher.id,
-                        specialization: researcher.specialization,
-                      },
-                    })
-                  }
-                  className="px-5 py-2 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700 hover:scale-105 transition-all"
-                >
-                  🧠 Open Forums
-                  {totalForums > 0 && (
-                    <span className="ml-2 bg-white text-teal-700 text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                      {totalForums}
-                    </span>
-                  )}
-                </button>
+            <div className="mt-6 flex justify-center gap-4">
+              <button
+                onClick={() =>
+                  navigate("/researcher-forums", {
+                    state: {
+                      researcherId: researcher.id,
+                      specialization: researcher.specialization,
+                    },
+                  })
+                }
+                className="px-5 py-2 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700 hover:scale-105 transition-all"
+              >
+                🧠 Open Forums
+                {totalForums > 0 && (
+                  <span className="ml-2 bg-white text-teal-700 text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
+                    {totalForums}
+                  </span>
+                )}
+              </button>
 
-                <button
-                  onClick={() => {
-                    setEditableResearcher(researcher);
-                    setEditing(true);
-                  }}
-                  className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Edit
-                </button>
-              </div>
-            </>
-          )}
-        </header>
+              <button
+                onClick={() => {
+                  setEditableResearcher(researcher);
+                  setEditing(true);
+                }}
+                className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Edit
+              </button>
+            </div>
+          </>
+        )}
+      </header>
 
         {/* ===== PUBLICATIONS ===== */}
         <Section
