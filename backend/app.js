@@ -7,6 +7,7 @@ import recommendationsRouter from "./src/routes/recommendationsRoutes.js";
 import forumRouter from "./src/routes/forums.js"
 import  researcherDashboardRouter from "./src/routes/researcherDashboardRoutes.js"
 import forumsRouter from "./src/routes/researcherforums.js";
+import pool from "./src/db.js"
 
 const app = express();
 const PORT = process.env.PORT || 5000;
