@@ -29,7 +29,7 @@ export default function SelectResearcher() {
     localStorage.setItem("activeResearcherId", selected);
 
     // Navigate to the dashboard and pass ID via state too
-    navigate("/dashboard", { state: { researcherId: selected } });
+    navigate("/researcher-dashboard", { state: { researcherId: selected } });
   };
 
   return (

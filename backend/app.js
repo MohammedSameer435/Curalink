@@ -107,3 +107,13 @@ app.get("/api/messages/:collaborationId", async (req, res) => {
 
   res.json(result.rows);
 });
+
+app.get("/", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM researchers ORDER BY id ASC;");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching researchers:", err);
+    res.status(500).json({ error: "Failed to fetch researchers." });
+  }
+});
