@@ -24,7 +24,7 @@ export const setupResearcher = async (req, res) => {
       });
     }
 
-    console.log("🧠 Incoming researcher data:", req.body);
+    console.log("Incoming researcher data:", req.body);
 
     // ✅ Normalize research interests (ensure array)
     const normalizedInterests = Array.isArray(research_interests)

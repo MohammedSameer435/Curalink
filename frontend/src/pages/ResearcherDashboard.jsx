@@ -22,7 +22,6 @@ export default function ResearcherDashboard() {
   const [error, setError] = useState("");
   const [dashboard, setDashboard] = useState(null);
 
-  // ❤️ Favorites state
   const [favorites, setFavorites] = useState({
     publications: [],
     clinical_trials: [],
@@ -37,7 +36,6 @@ export default function ResearcherDashboard() {
     });
   };
 
-  // Fetch researcher ID if not passed in props
   const ensureResearcherId = async () => {
     if (researcherId) return researcherId;
     try {

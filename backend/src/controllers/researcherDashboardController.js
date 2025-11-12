@@ -47,9 +47,7 @@ const pubQuery = `
     COALESCE(url, '') AS url,
     COALESCE("condition", 'General Research') AS "condition"
   FROM publications
-  WHERE LOWER("condition") LIKE LOWER($1)
-     OR LOWER(title) LIKE LOWER($1)
-     OR LOWER(journal) LIKE LOWER($1)
+  WHERE LOWER("specialization") LIKE LOWER($1)
   ORDER BY year DESC
   LIMIT 10;
 `;

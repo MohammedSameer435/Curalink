@@ -12,7 +12,6 @@ export default function ResearcherForums() {
   const [error, setError] = useState("");
   const [replyInputs, setReplyInputs] = useState({});
 
-  // ✅ Load forums related to this researcher's specialization
   useEffect(() => {
     const fetchForums = async () => {
       if (!researcherId) {
