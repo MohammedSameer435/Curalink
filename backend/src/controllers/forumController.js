@@ -1,5 +1,5 @@
 // src/controllers/forumController.js
-import { pool } from "../db/index.js";
+import { pool } from "./db/index.js";
 
 // ✅ Fetch all forum posts with replies
 export const getForums = async (req, res) => {

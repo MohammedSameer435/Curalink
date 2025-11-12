@@ -1,5 +1,5 @@
 // controllers/ResearchersController.js
-import { pool } from "../db/index.js";
+import { pool } from "./db/index.js";
 
 export const getResearcherDashboard = async (req, res) => {
   try {
