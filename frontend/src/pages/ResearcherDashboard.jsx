@@ -69,10 +69,18 @@ export default function ResearcherDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // ✅ Load researcherId from navigation state, query param, or localStorage
   const stateId = location.state?.researcherId;
+  const storedId =
+    typeof window !== "undefined"
+      ? localStorage.getItem("activeResearcherId")
+      : null;
   const queryId = getQueryParam(location.search, "id");
 
-  const [researcherId, setResearcherId] = useState(stateId || queryId || null);
+  const [researcherId, setResearcherId] = useState(
+    stateId || queryId || storedId || null
+  );
+
   const [dashboard, setDashboard] = useState(null);
   const [editableResearcher, setEditableResearcher] = useState(null);
   const [editing, setEditing] = useState(false);
@@ -193,11 +201,8 @@ export default function ResearcherDashboard() {
     publications = [],
     clinical_trials = [],
     collaborators = [],
-    researcher_forums = [],
-    patient_forums = [],
+    incoming_requests = [],
   } = dashboard;
-
-  const totalForums = researcher_forums.length + patient_forums.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 px-6 py-10">
@@ -205,140 +210,19 @@ export default function ResearcherDashboard() {
         {/* ===== HEADER ===== */}
         <header className="mb-10 text-center">
           {editing && editableResearcher ? (
-            <div className="flex flex-col gap-4 max-w-md mx-auto">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Name
-                </label>
-                <input
-                  className="border p-2 rounded w-full"
-                  value={editableResearcher.name || ""}
-                  onChange={(e) => handleChange("name", e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Specialization
-                </label>
-                <input
-                  className="border p-2 rounded w-full"
-                  value={editableResearcher.specialization || ""}
-                  onChange={(e) =>
-                    handleChange("specialization", e.target.value)
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Institution
-                </label>
-                <input
-                  className="border p-2 rounded w-full"
-                  value={editableResearcher.institution || ""}
-                  onChange={(e) => handleChange("institution", e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Country
-                </label>
-                <input
-                  className="border p-2 rounded w-full"
-                  value={editableResearcher.country || ""}
-                  onChange={(e) => handleChange("country", e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Research Interests
-                </label>
-                <input
-                  className="border p-2 rounded w-full"
-                  value={
-                    Array.isArray(editableResearcher.research_interests)
-                      ? editableResearcher.research_interests.join(", ")
-                      : editableResearcher.research_interests || ""
-                  }
-                  onChange={(e) =>
-                    handleChange(
-                      "research_interests",
-                      e.target.value.split(",").map((s) => s.trim())
-                    )
-                  }
-                />
-              </div>
-
-              <div className="flex justify-center gap-2 mt-4">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className={`px-4 py-2 rounded text-white ${
-                    saving
-                      ? "bg-teal-400 cursor-not-allowed"
-                      : "bg-teal-600 hover:bg-teal-700"
-                  }`}
-                >
-                  {saving ? "Saving..." : "Save"}
-                </button>
-                <button
-                  onClick={() => setEditing(false)}
-                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
+            <EditResearcherForm
+              researcher={editableResearcher}
+              handleChange={handleChange}
+              handleSave={handleSave}
+              saving={saving}
+              setEditing={setEditing}
+            />
           ) : (
-            <>
-              <h1 className="text-4xl font-extrabold text-gray-800 mb-2">
-                🧬 {researcher.name}
-              </h1>
-              <p className="text-gray-600 text-lg">
-                {researcher.specialization} — {researcher.institution} (
-                {researcher.country})
-              </p>
-              <p className="text-gray-500 mt-1 text-sm">
-                Interests:{" "}
-                {Array.isArray(researcher.research_interests)
-                  ? researcher.research_interests.join(", ")
-                  : researcher.research_interests}
-              </p>
-
-              <div className="mt-6 flex justify-center gap-4">
-                <button
-                  onClick={() =>
-                    navigate("/researcher-forums", {
-                      state: {
-                        researcherId: researcher.id,
-                        specialization: researcher.specialization,
-                      },
-                    })
-                  }
-                  className="px-5 py-2 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700 hover:scale-105 transition-all"
-                >
-                  🧠 Open Forums
-                  {totalForums > 0 && (
-                    <span className="ml-2 bg-white text-teal-700 text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                      {totalForums}
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setEditableResearcher(researcher);
-                    setEditing(true);
-                  }}
-                  className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Edit
-                </button>
-              </div>
-            </>
+            <HeaderDisplay
+              researcher={researcher}
+              navigate={navigate}
+              setEditing={setEditing}
+            />
           )}
         </header>
 
@@ -358,7 +242,7 @@ export default function ResearcherDashboard() {
           handleFavorite={handleFavorite}
         />
 
-        {/* ===== COLLABORATORS (with chat) ===== */}
+        {/* ===== COLLABORATORS (with chat & request) ===== */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold text-teal-700 mb-4">
             🤝 Suggested Collaborators
@@ -394,12 +278,21 @@ export default function ResearcherDashboard() {
                   ) : (
                     <button
                       onClick={async () => {
-                        await api.post("/api/collaborations/request", {
-                          requesterId: researcher.id,
-                          targetId: c.id,
-                          message: "Let's collaborate!",
-                        });
-                        alert("Request sent!");
+                        try {
+                          await api.post("/api/collaborations/request", {
+                            requesterId: researcher.id,
+                            targetId: c.id,
+                            message: "Let's collaborate!",
+                          });
+                          alert("Request sent!");
+                          const updated = await api.get(
+                            `/api/researchers/${researcher.id}/dashboard`
+                          );
+                          setDashboard(updated.data);
+                        } catch (err) {
+                          console.error(err);
+                          alert("Failed to send request.");
+                        }
                       }}
                       className="px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 mt-3"
                     >
@@ -412,6 +305,15 @@ export default function ResearcherDashboard() {
           )}
         </section>
 
+        {/* ===== INCOMING REQUESTS ===== */}
+        {incoming_requests?.length > 0 && (
+          <IncomingRequestsSection
+            incoming_requests={incoming_requests}
+            researcher={researcher}
+            setDashboard={setDashboard}
+          />
+        )}
+
         {/* ===== FAVORITES ===== */}
         <FavoritesSection favorites={favorites} />
       </div>
@@ -419,7 +321,176 @@ export default function ResearcherDashboard() {
   );
 }
 
-// Publications / Trials Section (unchanged)
+/* ========== Subcomponents ========== */
+
+function EditResearcherForm({ researcher, handleChange, handleSave, saving, setEditing }) {
+  return (
+    <div className="flex flex-col gap-4 max-w-md mx-auto">
+      {["name", "specialization", "institution", "country"].map((field) => (
+        <div key={field}>
+          <label className="block text-sm font-medium text-gray-700 capitalize">
+            {field}
+          </label>
+          <input
+            className="border p-2 rounded w-full"
+            value={researcher[field] || ""}
+            onChange={(e) => handleChange(field, e.target.value)}
+          />
+        </div>
+      ))}
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Research Interests
+        </label>
+        <input
+          className="border p-2 rounded w-full"
+          value={
+            Array.isArray(researcher.research_interests)
+              ? researcher.research_interests.join(", ")
+              : researcher.research_interests || ""
+          }
+          onChange={(e) =>
+            handleChange(
+              "research_interests",
+              e.target.value.split(",").map((s) => s.trim())
+            )
+          }
+        />
+      </div>
+
+      <div className="flex justify-center gap-2 mt-4">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={`px-4 py-2 rounded text-white ${
+            saving
+              ? "bg-teal-400 cursor-not-allowed"
+              : "bg-teal-600 hover:bg-teal-700"
+          }`}
+        >
+          {saving ? "Saving..." : "Save"}
+        </button>
+        <button
+          onClick={() => setEditing(false)}
+          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function HeaderDisplay({ researcher, navigate, setEditing }) {
+  return (
+    <>
+      <h1 className="text-4xl font-extrabold text-gray-800 mb-2">
+        🧬 {researcher.name}
+      </h1>
+      <p className="text-gray-600 text-lg">
+        {researcher.specialization} — {researcher.institution} (
+        {researcher.country})
+      </p>
+      <p className="text-gray-500 mt-1 text-sm">
+        Interests:{" "}
+        {Array.isArray(researcher.research_interests)
+          ? researcher.research_interests.join(", ")
+          : researcher.research_interests}
+      </p>
+
+      <div className="mt-6 flex justify-center gap-4">
+        <button
+          onClick={() =>
+            navigate("/researcher-forums", {
+              state: {
+                researcherId: researcher.id,
+                specialization: researcher.specialization,
+              },
+            })
+          }
+          className="px-5 py-2 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700 hover:scale-105 transition-all"
+        >
+          🧠 Open Forums
+        </button>
+
+        <button
+          onClick={() => setEditing(true)}
+          className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Edit
+        </button>
+      </div>
+    </>
+  );
+}
+
+function IncomingRequestsSection({ incoming_requests, researcher, setDashboard }) {
+  return (
+    <section className="mb-12">
+      <h2 className="text-2xl font-semibold text-teal-700 mb-4">
+        📥 Incoming Collaboration Requests
+      </h2>
+      <div className="grid md:grid-cols-2 gap-6">
+        {incoming_requests.map((req) => (
+          <div
+            key={req.id}
+            className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition-transform hover:-translate-y-1"
+          >
+            <h3 className="font-bold text-lg mb-1">
+              Request from {req.requester_name}
+            </h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Message: {req.message || "No message"}
+            </p>
+
+            {req.status === "pending" ? (
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    await api.put(`/api/collaborations/${req.id}/respond`, {
+                      status: "accepted",
+                    });
+                    alert("Collaboration accepted!");
+                    const updated = await api.get(
+                      `/api/researchers/${researcher.id}/dashboard`
+                    );
+                    setDashboard(updated.data);
+                  }}
+                  className="bg-teal-600 text-white px-3 py-1 rounded hover:bg-teal-700"
+                >
+                  Accept
+                </button>
+
+                <button
+                  onClick={async () => {
+                    await api.put(`/api/collaborations/${req.id}/respond`, {
+                      status: "rejected",
+                    });
+                    alert("Collaboration rejected.");
+                    const updated = await api.get(
+                      `/api/researchers/${researcher.id}/dashboard`
+                    );
+                    setDashboard(updated.data);
+                  }}
+                  className="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400"
+                >
+                  Reject
+                </button>
+              </div>
+            ) : req.status === "accepted" ? (
+              <p className="text-green-600 font-medium">✅ Accepted</p>
+            ) : (
+              <p className="text-red-500 font-medium">❌ Rejected</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* Publication / Trial Section */
 function Section({ title, data, type, handleFavorite }) {
   return (
     <section className="mb-12">
@@ -466,9 +537,11 @@ function Section({ title, data, type, handleFavorite }) {
   );
 }
 
-// Favorites (unchanged)
+/* Favorites Section */
 function FavoritesSection({ favorites }) {
-  const noFavorites = Object.values(favorites).every((arr) => arr.length === 0);
+  const noFavorites = Object.values(favorites).every(
+    (arr) => arr.length === 0
+  );
   if (noFavorites)
     return (
       <section className="mt-14">
@@ -496,9 +569,7 @@ function FavoritesSection({ favorites }) {
                   key={item.id}
                   className="bg-white p-4 rounded-lg shadow hover:shadow-md"
                 >
-                  <h4 className="font-semibold">
-                    {item.title || item.name}
-                  </h4>
+                  <h4 className="font-semibold">{item.title || item.name}</h4>
                   {item.url && (
                     <a
                       href={item.url}

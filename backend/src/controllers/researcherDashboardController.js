@@ -53,6 +53,8 @@ const pubQuery = `
 `;
 const pubResult = await pool.query(pubQuery, [`%${specializationToUse}%`]);
 
+
+
 // 3️⃣ Fetch Related Clinical Trials (fallback-safe)
 const trialQuery = `
   SELECT 
@@ -111,6 +113,18 @@ if (trialResult.rows.length === 0) {
     `;
     const collabResult = await pool.query(collabQuery, [specializationToUse, id]);
 
+    const incomingRequests = await pool.query(
+      `SELECT 
+        cr.*, 
+        r.name AS requester_name, 
+        r.institution AS requester_institution, 
+        r.country AS requester_country
+       FROM collaboration_requests cr
+       JOIN researchers r ON r.id = cr.requester_id
+       WHERE cr.target_id = $1
+       ORDER BY cr.created_at DESC;`,
+      [id]
+    );
     // 5️⃣ Optional: fetch forums (if you want later)
     const researcher_forums = [];
     const patient_forums = [];
@@ -137,6 +151,7 @@ if (trialResult.rows.length === 0) {
       collaborators: collabResult.rows,
       researcher_forums,
       patient_forums,
+      incoming_requests: incomingRequests.rows,
     });
   } catch (err) {
     console.error("❌ Error in getResearcherDashboard:", err);
