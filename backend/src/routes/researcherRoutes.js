@@ -1,6 +1,6 @@
 import express from "express";
 import { getSpecializations } from "../controllers/researcherController.js"; 
-import pool from "../db/index.js"
+import pool from "./src/db/index.js"
 const router = express.Router();
 
 router.get("/specializations/list", getSpecializations);
