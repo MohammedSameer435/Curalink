@@ -60,7 +60,7 @@ export default function ResearcherForums() {
 
       // Refresh data
       const res = await api.get(
-  `/api/forums/${specialization}`
+  `/api/researcherforums/${specialization}`
 );
 
       setForums({
