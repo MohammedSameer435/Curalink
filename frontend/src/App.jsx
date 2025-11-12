@@ -21,6 +21,7 @@ export default function App() {
         <Route path="/forums" element={<Forums />} />
         <Route path="/researcher-dashboard" element={<ResearcherDashboard />} />
         <Route path="/select-researcher" element={<SelectResearcher />} />
+        <Route path="/login" element={<SelectResearcher />} />
         <Route path="/researcher-forums" element={<ResearcherForums />} />
       </Routes>
     </Router>
