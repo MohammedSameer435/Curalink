@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import api from "../api"; // Make sure ../api exports a configured Axios instance
+import api from "../api";
 
 // Utility to safely extract query params
 function getQueryParam(search, key) {
@@ -12,24 +12,73 @@ function getQueryParam(search, key) {
   }
 }
 
+// 🔹 ChatBox Component
+function ChatBox({ collaborationId, currentUserId }) {
+  const [messages, setMessages] = useState([]);
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      const res = await api.get(`/api/messages/${collaborationId}`);
+      setMessages(res.data);
+    };
+    if (collaborationId) load();
+  }, [collaborationId]);
+
+  const handleSend = async () => {
+    if (!text.trim()) return;
+    const res = await api.post("/api/messages", {
+      collaborationId,
+      senderId: currentUserId,
+      text,
+    });
+    setMessages((prev) => [...prev, res.data]);
+    setText("");
+  };
+
+  return (
+    <div className="mt-4 border-t pt-3">
+      <h4 className="font-semibold text-gray-700 mb-2">💬 Chat</h4>
+      <div className="h-48 overflow-y-auto border p-2 mb-2 rounded">
+        {messages.map((m) => (
+          <div key={m.id} className="mb-1">
+            <strong>{m.sender_name || "You"}:</strong> {m.text}
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Type a message..."
+          className="flex-1 border p-2 rounded"
+        />
+        <button
+          onClick={handleSend}
+          className="bg-teal-600 text-white px-3 rounded hover:bg-teal-700"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ResearcherDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Extract possible researcher IDs from navigation state or URL query
   const stateId = location.state?.researcherId;
   const queryId = getQueryParam(location.search, "id");
 
   const [researcherId, setResearcherId] = useState(stateId || queryId || null);
   const [dashboard, setDashboard] = useState(null);
-
   const [editableResearcher, setEditableResearcher] = useState(null);
   const [editing, setEditing] = useState(false);
-
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-
   const [favorites, setFavorites] = useState({
     publications: [],
     clinical_trials: [],
@@ -71,13 +120,11 @@ export default function ResearcherDashboard() {
     setFavorites((prev) => {
       const exists = prev[type].some((f) => f.id === item.id);
       if (exists) {
-        // Toggle off (remove favorite)
         return {
           ...prev,
           [type]: prev[type].filter((f) => f.id !== item.id),
         };
       }
-      // Add to favorites
       return { ...prev, [type]: [...prev[type], item] };
     });
   };
@@ -124,31 +171,21 @@ export default function ResearcherDashboard() {
     load();
   }, [researcherId]);
 
-  // 🔹 Sync editableResearcher when dashboard loads
   useEffect(() => {
     if (dashboard?.researcher) {
       setEditableResearcher(dashboard.researcher);
     }
   }, [dashboard]);
 
-  // 🔹 Handle updated query or state IDs
   useEffect(() => {
     const id = stateId || queryId;
     if (id && id !== researcherId) setResearcherId(id);
   }, [stateId, queryId]);
 
-  // ========== Render Section ==========
-
   if (loading)
-    return (
-      <div className="text-center mt-10 text-gray-600">
-        Loading Researcher Dashboard...
-      </div>
-    );
-
+    return <div className="text-center mt-10 text-gray-600">Loading...</div>;
   if (error)
     return <div className="text-center mt-10 text-red-500">{error}</div>;
-
   if (!dashboard) return null;
 
   const {
@@ -167,128 +204,143 @@ export default function ResearcherDashboard() {
       <div className="max-w-5xl mx-auto">
         {/* ===== HEADER ===== */}
         <header className="mb-10 text-center">
-        {editing && editableResearcher ? (
-          <div className="flex flex-col gap-4 max-w-md mx-auto">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Name</label>
-              <input
-                className="border p-2 rounded w-full"
-                value={editableResearcher.name || ""}
-                onChange={(e) => handleChange("name", e.target.value)}
-              />
-            </div>
+          {editing && editableResearcher ? (
+            <div className="flex flex-col gap-4 max-w-md mx-auto">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Name
+                </label>
+                <input
+                  className="border p-2 rounded w-full"
+                  value={editableResearcher.name || ""}
+                  onChange={(e) => handleChange("name", e.target.value)}
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Specialization</label>
-              <input
-                className="border p-2 rounded w-full"
-                value={editableResearcher.specialization || ""}
-                onChange={(e) => handleChange("specialization", e.target.value)}
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Specialization
+                </label>
+                <input
+                  className="border p-2 rounded w-full"
+                  value={editableResearcher.specialization || ""}
+                  onChange={(e) =>
+                    handleChange("specialization", e.target.value)
+                  }
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Institution</label>
-              <input
-                className="border p-2 rounded w-full"
-                value={editableResearcher.institution || ""}
-                onChange={(e) => handleChange("institution", e.target.value)}
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Institution
+                </label>
+                <input
+                  className="border p-2 rounded w-full"
+                  value={editableResearcher.institution || ""}
+                  onChange={(e) => handleChange("institution", e.target.value)}
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Country</label>
-              <input
-                className="border p-2 rounded w-full"
-                value={editableResearcher.country || ""}
-                onChange={(e) => handleChange("country", e.target.value)}
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Country
+                </label>
+                <input
+                  className="border p-2 rounded w-full"
+                  value={editableResearcher.country || ""}
+                  onChange={(e) => handleChange("country", e.target.value)}
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Research Interests</label>
-              <input
-                className="border p-2 rounded w-full"
-                value={
-                  Array.isArray(editableResearcher.research_interests)
-                    ? editableResearcher.research_interests.join(", ")
-                    : editableResearcher.research_interests || ""
-                }
-                onChange={(e) =>
-                  handleChange(
-                    "research_interests",
-                    e.target.value.split(",").map((s) => s.trim())
-                  )
-                }
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Research Interests
+                </label>
+                <input
+                  className="border p-2 rounded w-full"
+                  value={
+                    Array.isArray(editableResearcher.research_interests)
+                      ? editableResearcher.research_interests.join(", ")
+                      : editableResearcher.research_interests || ""
+                  }
+                  onChange={(e) =>
+                    handleChange(
+                      "research_interests",
+                      e.target.value.split(",").map((s) => s.trim())
+                    )
+                  }
+                />
+              </div>
 
-            <div className="flex justify-center gap-2 mt-4">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className={`px-4 py-2 rounded text-white ${
-                  saving ? "bg-teal-400 cursor-not-allowed" : "bg-teal-600 hover:bg-teal-700"
-                }`}
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
-              <button
-                onClick={() => setEditing(false)}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
+              <div className="flex justify-center gap-2 mt-4">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className={`px-4 py-2 rounded text-white ${
+                    saving
+                      ? "bg-teal-400 cursor-not-allowed"
+                      : "bg-teal-600 hover:bg-teal-700"
+                  }`}
+                >
+                  {saving ? "Saving..." : "Save"}
+                </button>
+                <button
+                  onClick={() => setEditing(false)}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <>
-            <h1 className="text-4xl font-extrabold text-gray-800 mb-2">
-              🧬 {researcher.name}
-            </h1>
-            <p className="text-gray-600 text-lg">
-              {researcher.specialization} — {researcher.institution} ({researcher.country})
-            </p>
-            <p className="text-gray-500 mt-1 text-sm">
-              Interests:{" "}
-              {Array.isArray(researcher.research_interests)
-                ? researcher.research_interests.join(", ")
-                : researcher.research_interests}
-            </p>
+          ) : (
+            <>
+              <h1 className="text-4xl font-extrabold text-gray-800 mb-2">
+                🧬 {researcher.name}
+              </h1>
+              <p className="text-gray-600 text-lg">
+                {researcher.specialization} — {researcher.institution} (
+                {researcher.country})
+              </p>
+              <p className="text-gray-500 mt-1 text-sm">
+                Interests:{" "}
+                {Array.isArray(researcher.research_interests)
+                  ? researcher.research_interests.join(", ")
+                  : researcher.research_interests}
+              </p>
 
-            <div className="mt-6 flex justify-center gap-4">
-              <button
-                onClick={() =>
-                  navigate("/researcher-forums", {
-                    state: {
-                      researcherId: researcher.id,
-                      specialization: researcher.specialization,
-                    },
-                  })
-                }
-                className="px-5 py-2 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700 hover:scale-105 transition-all"
-              >
-                🧠 Open Forums
-                {totalForums > 0 && (
-                  <span className="ml-2 bg-white text-teal-700 text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                    {totalForums}
-                  </span>
-                )}
-              </button>
+              <div className="mt-6 flex justify-center gap-4">
+                <button
+                  onClick={() =>
+                    navigate("/researcher-forums", {
+                      state: {
+                        researcherId: researcher.id,
+                        specialization: researcher.specialization,
+                      },
+                    })
+                  }
+                  className="px-5 py-2 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700 hover:scale-105 transition-all"
+                >
+                  🧠 Open Forums
+                  {totalForums > 0 && (
+                    <span className="ml-2 bg-white text-teal-700 text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
+                      {totalForums}
+                    </span>
+                  )}
+                </button>
 
-              <button
-                onClick={() => {
-                  setEditableResearcher(researcher);
-                  setEditing(true);
-                }}
-                className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Edit
-              </button>
-            </div>
-          </>
-        )}
-      </header>
+                <button
+                  onClick={() => {
+                    setEditableResearcher(researcher);
+                    setEditing(true);
+                  }}
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Edit
+                </button>
+              </div>
+            </>
+          )}
+        </header>
 
         {/* ===== PUBLICATIONS ===== */}
         <Section
@@ -306,43 +358,59 @@ export default function ResearcherDashboard() {
           handleFavorite={handleFavorite}
         />
 
-        {/* ===== COLLABORATORS ===== */}
-<section className="mb-12">
-  <h2 className="text-2xl font-semibold text-teal-700 mb-4">
-    🤝 Suggested Collaborators
-  </h2>
-  {collaborators.length === 0 ? (
-    <p className="text-gray-500">No collaborators matched yet.</p>
-  ) : (
-    <div className="grid md:grid-cols-2 gap-6">
-      {collaborators.map((c) => (
-        <div
-          key={c.id}
-          className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition-transform hover:-translate-y-1"
-        >
-          <h3 className="font-bold text-lg mb-1">
-            {c.name || "Unnamed Collaborator"}
-          </h3>
-          <p className="text-sm text-gray-600">
-            {c.institution} — {c.country}
-          </p>
-          <p className="text-sm text-gray-700 mt-2 leading-relaxed">
-            Common specialization: {c.specialization}
-          </p>
-          <div className="flex justify-end mt-3">
-            <button
-              onClick={() => handleFavorite("collaborators", c)}
-              className="px-3 py-1 text-sm font-medium text-rose-500 bg-rose-50 border border-rose-100 rounded-full hover:bg-rose-100 hover:scale-105 transition-all"
-            >
-              ❤️
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  )}
-</section>
+        {/* ===== COLLABORATORS (with chat) ===== */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold text-teal-700 mb-4">
+            🤝 Suggested Collaborators
+          </h2>
+          {collaborators.length === 0 ? (
+            <p className="text-gray-500">No collaborators matched yet.</p>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              {collaborators.map((c) => (
+                <div
+                  key={c.id}
+                  className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition-transform hover:-translate-y-1"
+                >
+                  <h3 className="font-bold text-lg mb-1">
+                    {c.name || "Unnamed Collaborator"}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {c.institution} — {c.country}
+                  </p>
+                  <p className="text-sm text-gray-700 mt-2 leading-relaxed">
+                    Common specialization: {c.specialization}
+                  </p>
 
+                  {c.collaboration_status === "accepted" ? (
+                    <ChatBox
+                      collaborationId={c.collaboration_id}
+                      currentUserId={researcher.id}
+                    />
+                  ) : c.collaboration_status === "pending" ? (
+                    <p className="text-gray-500 mt-2 italic">
+                      Request pending...
+                    </p>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        await api.post("/api/collaborations/request", {
+                          requesterId: researcher.id,
+                          targetId: c.id,
+                          message: "Let's collaborate!",
+                        });
+                        alert("Request sent!");
+                      }}
+                      className="px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 mt-3"
+                    >
+                      Request Collaboration
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* ===== FAVORITES ===== */}
         <FavoritesSection favorites={favorites} />
@@ -351,9 +419,7 @@ export default function ResearcherDashboard() {
   );
 }
 
-// ================== Reusable Subcomponents ==================
-
-// Publications / Trials / Collaborators Section
+// Publications / Trials Section (unchanged)
 function Section({ title, data, type, handleFavorite }) {
   return (
     <section className="mb-12">
@@ -368,7 +434,9 @@ function Section({ title, data, type, handleFavorite }) {
               className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition-transform hover:-translate-y-1"
             >
               <h3 className="font-bold text-lg mb-1">{item.title}</h3>
-              <p className="text-sm text-gray-600">{item.journal || item.location || item.institution}</p>
+              <p className="text-sm text-gray-600">
+                {item.journal || item.location || item.institution}
+              </p>
               <p className="text-sm text-gray-700 mt-2 leading-relaxed">
                 {item.summary}
               </p>
@@ -398,20 +466,24 @@ function Section({ title, data, type, handleFavorite }) {
   );
 }
 
-// Favorites Section
+// Favorites (unchanged)
 function FavoritesSection({ favorites }) {
   const noFavorites = Object.values(favorites).every((arr) => arr.length === 0);
   if (noFavorites)
     return (
       <section className="mt-14">
-        <h2 className="text-2xl font-bold text-teal-700 mb-4">❤️ My Favorites</h2>
+        <h2 className="text-2xl font-bold text-teal-700 mb-4">
+          ❤️ My Favorites
+        </h2>
         <p className="text-gray-500">No favorites yet. Click ❤️ to save items.</p>
       </section>
     );
 
   return (
     <section className="mt-14">
-      <h2 className="text-2xl font-bold text-teal-700 mb-4">❤️ My Favorites</h2>
+      <h2 className="text-2xl font-bold text-teal-700 mb-4">
+        ❤️ My Favorites
+      </h2>
       {Object.entries(favorites).map(([key, arr]) =>
         arr.length > 0 ? (
           <div key={key} className="mb-8">
@@ -424,7 +496,9 @@ function FavoritesSection({ favorites }) {
                   key={item.id}
                   className="bg-white p-4 rounded-lg shadow hover:shadow-md"
                 >
-                  <h4 className="font-semibold">{item.title || item.name}</h4>
+                  <h4 className="font-semibold">
+                    {item.title || item.name}
+                  </h4>
                   {item.url && (
                     <a
                       href={item.url}
