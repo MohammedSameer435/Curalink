@@ -99,17 +99,30 @@ if (trialResult.rows.length === 0) {
     // 4️⃣ Suggested Collaborators (same specialization, exclude self)
     const collabQuery = `
       SELECT 
-        id, 
-        COALESCE(name, 'Unknown Researcher') AS name,
-        COALESCE(specialization, 'General Research') AS specialization,
-        COALESCE(research_interests, ARRAY[]::text[]) AS research_interests,
-        COALESCE(institution, 'N/A') AS institution,
-        COALESCE(country, 'N/A') AS country,
-        COALESCE(availability, false) AS availability
-      FROM researchers
-      WHERE COALESCE(specialization, 'General Research') = $1
-        AND id <> $2
-      LIMIT 10;
+  r.id,
+  r.name,
+  r.specialization,
+  r.institution,
+  r.country,
+  r.research_interests,
+  r.availability,
+
+  -- Collaboration info (null if none exists)
+  cr.id AS collaboration_id,
+  cr.status AS collaboration_status
+
+FROM researchers r
+LEFT JOIN collaboration_requests cr
+  ON (
+       (cr.requester_id = $2 AND cr.target_id = r.id)
+       OR
+       (cr.target_id = $2 AND cr.requester_id = r.id)
+     )
+
+WHERE r.id <> $2
+  AND COALESCE(r.specialization, 'General Research') = $1
+
+LIMIT 10;
     `;
     const collabResult = await pool.query(collabQuery, [specializationToUse, id]);
 
