@@ -32,6 +32,9 @@ app.use(
     credentials: true,
   })
 );
+import searchRouter from "./src/routes/researcherSearchRoutes.js";
+
+app.use("/api/search", searchRouter);
 
 app.use("/api/researchers", researcherRouter);
 app.use("/api/ai", aiRouter);

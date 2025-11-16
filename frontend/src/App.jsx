@@ -9,7 +9,7 @@ import Forums from "./pages/ForumPage.jsx";
 import ResearcherDashboard from "./pages/ResearcherDashboard.jsx";
 import ResearcherForums from "./pages/ResearcherForums.jsx"; 
 import SelectResearcher from "./pages/SelectResearcher.jsx";
-
+import ResearcherSearch from "./pages/ResearcherSearch.jsx";
 export default function App() {
   return (
     <Router>
@@ -22,6 +22,7 @@ export default function App() {
         <Route path="/researcher-dashboard" element={<ResearcherDashboard />} />        
         <Route path="/login" element={<SelectResearcher />} />
         <Route path="/researcher-forums" element={<ResearcherForums />} />
+        <Route path="/researcher-search" element={<ResearcherSearch />} />
       </Routes>
     </Router>
   );
