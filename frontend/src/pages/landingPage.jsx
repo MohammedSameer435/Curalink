@@ -50,6 +50,7 @@ export default function LandingPage() {
             I am a Researcher
         </button>
 
+
       </motion.div>
 
       {/* Footer */}

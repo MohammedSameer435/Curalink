@@ -224,6 +224,14 @@ export default function ResearcherDashboard() {
               setEditing={setEditing}
             />
           )}
+
+          <button
+  onClick={() => navigate("/researcher-search")}
+  className="px-5 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 hover:scale-105 transition-all"
+>
+  🔍 Search Researchers
+</button>
+
         </header>
 
         {/* ===== PUBLICATIONS ===== */}
@@ -252,55 +260,64 @@ export default function ResearcherDashboard() {
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
               {collaborators.map((c) => (
-                <div
-                  key={c.id}
-                  className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition-transform hover:-translate-y-1"
-                >
-                  <h3 className="font-bold text-lg mb-1">
-                    {c.name || "Unnamed Collaborator"}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {c.institution} — {c.country}
-                  </p>
-                  <p className="text-sm text-gray-700 mt-2 leading-relaxed">
-                    Common specialization: {c.specialization}
-                  </p>
+  <div
+    key={c.id}
+    className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition-transform hover:-translate-y-1"
+  >
+    <h3 className="font-bold text-lg mb-1">
+      {c.name || "Unnamed Collaborator"}
+    </h3>
+    <p className="text-sm text-gray-600">
+      {c.institution} — {c.country}
+    </p>
+    <p className="text-sm text-gray-700 mt-2 leading-relaxed">
+      Common specialization: {c.specialization}
+    </p>
 
-                  {c.collaboration_status === "accepted" ? (
-                    <ChatBox
-                      collaborationId={c.collaboration_id}
-                      currentUserId={researcher.id}
-                    />
-                  ) : c.collaboration_status === "pending" ? (
-                    <p className="text-gray-500 mt-2 italic">
-                      Request pending...
-                    </p>
-                  ) : (
-                    <button
-                      onClick={async () => {
-                        try {
-                          await api.post("/api/collaborations/request", {
-                            requesterId: researcher.id,
-                            targetId: c.id,
-                            message: "Let's collaborate!",
-                          });
-                          alert("Request sent!");
-                          const updated = await api.get(
-                            `/api/researchers/${researcher.id}/dashboard`
-                          );
-                          setDashboard(updated.data);
-                        } catch (err) {
-                          console.error(err);
-                          alert("Failed to send request.");
-                        }
-                      }}
-                      className="px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 mt-3"
-                    >
-                      Request Collaboration
-                    </button>
-                  )}
-                </div>
-              ))}
+    {/* ✅ New View Profile Button */}
+    <button
+      onClick={() => navigate(`/researcher-profile/${c.id}`)}
+      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 mt-2"
+    >
+      👀 View Profile
+    </button>
+
+    {c.collaboration_status === "accepted" ? (
+      <ChatBox
+        collaborationId={c.collaboration_id}
+        currentUserId={researcher.id}
+      />
+    ) : c.collaboration_status === "pending" ? (
+      <p className="text-gray-500 mt-2 italic">
+        Request pending...
+      </p>
+    ) : (
+      <button
+        onClick={async () => {
+          try {
+            await api.post("/api/collaborations/request", {
+              requesterId: researcher.id,
+              targetId: c.id,
+              message: "Let's collaborate!",
+            });
+            alert("Request sent!");
+            const updated = await api.get(
+              `/api/researchers/${researcher.id}/dashboard`
+            );
+            setDashboard(updated.data);
+          } catch (err) {
+            console.error(err);
+            alert("Failed to send request.");
+          }
+        }}
+        className="px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 mt-3"
+      >
+        Request Collaboration
+      </button>
+    )}
+  </div>
+))}
+
             </div>
           )}
         </section>

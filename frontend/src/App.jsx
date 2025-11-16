@@ -10,6 +10,8 @@ import ResearcherDashboard from "./pages/ResearcherDashboard.jsx";
 import ResearcherForums from "./pages/ResearcherForums.jsx"; 
 import SelectResearcher from "./pages/SelectResearcher.jsx";
 import ResearcherSearch from "./pages/ResearcherSearch.jsx";
+import ResearcherProfile from "./pages/ResearcherProfile.jsx"
+
 export default function App() {
   return (
     <Router>
@@ -23,6 +25,7 @@ export default function App() {
         <Route path="/login" element={<SelectResearcher />} />
         <Route path="/researcher-forums" element={<ResearcherForums />} />
         <Route path="/researcher-search" element={<ResearcherSearch />} />
+        <Route path="/researcher-profile/:id" element={<ResearcherProfile />} />
       </Routes>
     </Router>
   );
