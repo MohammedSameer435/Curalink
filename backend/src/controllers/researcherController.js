@@ -51,7 +51,7 @@ export const getResearcherPublicProfile = async (req, res) => {
     // 🔬 3. Clinical Trials
     const trialsRes = await pool.query(
       `SELECT id, title, url, country, status
-       FROM clinical_trials
+       FROM researcher_clinical_trials
        WHERE LOWER(condition) LIKE LOWER($1)
        ORDER BY id DESC
        LIMIT 5;`,
