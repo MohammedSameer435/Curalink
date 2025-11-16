@@ -3,6 +3,6 @@ import { searchResearchers } from "../controllers/SearchController.js";
 
 const router = express.Router();
 
-router.get("/researchers", searchResearchers);
+router.get("/researcher-profile/:id", searchResearchers);
 
 export default router;
