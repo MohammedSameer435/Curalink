@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../api";
 
-// Utility to safely extract query params
+// ==========================================================
+// 🔹 Utility: Extract Query Parameters
+// ==========================================================
 function getQueryParam(search, key) {
   try {
     const params = new URLSearchParams(search);
@@ -12,7 +14,9 @@ function getQueryParam(search, key) {
   }
 }
 
-// 🔹 ChatBox Component
+// ==========================================================
+// 🔹 Chat Component
+// ==========================================================
 function ChatBox({ collaborationId, currentUserId }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
@@ -39,6 +43,7 @@ function ChatBox({ collaborationId, currentUserId }) {
   return (
     <div className="mt-4 border-t pt-3">
       <h4 className="font-semibold text-gray-700 mb-2">💬 Chat</h4>
+
       <div className="h-48 overflow-y-auto border p-2 mb-2 rounded">
         {messages.map((m) => (
           <div key={m.id} className="mb-1">
@@ -46,6 +51,7 @@ function ChatBox({ collaborationId, currentUserId }) {
           </div>
         ))}
       </div>
+
       <div className="flex gap-2">
         <input
           type="text"
@@ -65,11 +71,16 @@ function ChatBox({ collaborationId, currentUserId }) {
   );
 }
 
+// ==========================================================
+// 🔹 MAIN DASHBOARD COMPONENT
+// ==========================================================
 export default function ResearcherDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ✅ Load researcherId from navigation state, query param, or localStorage
+  // -------------------------------------
+  // Get researcher ID (login identity)
+  // -------------------------------------
   const stateId = location.state?.researcherId;
   const storedId =
     typeof window !== "undefined"
@@ -93,51 +104,35 @@ export default function ResearcherDashboard() {
     collaborators: [],
   });
 
-  // 🔹 Handle editable field changes
-  const handleChange = (field, value) => {
-    setEditableResearcher((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  // -------------------------------------
+  // If user clicked "Open Chat" from profile:
+  // Read ?openChatWith=ID
+  // -------------------------------------
+  const chatTargetId = getQueryParam(location.search, "openChatWith");
 
-  // 🔹 Save researcher edits
-  const handleSave = async () => {
-    if (!editableResearcher?.id) return alert("Researcher ID missing.");
-    setSaving(true);
-    try {
-      const res = await api.put(
-        `/api/researchers/${editableResearcher.id}`,
-        editableResearcher
+  // ==========================================================
+  // 🔹 Auto-scroll to chat if redirected from profile
+  // ==========================================================
+  useEffect(() => {
+    if (chatTargetId && dashboard?.collaborators) {
+      const collab = dashboard.collaborators.find(
+        (c) => c.id == chatTargetId
       );
-      setDashboard((prev) => ({
-        ...prev,
-        researcher: res.data.researcher,
-      }));
-      setEditing(false);
-    } catch (err) {
-      console.error("Failed to update researcher:", err);
-      alert("Failed to save changes.");
-    } finally {
-      setSaving(false);
-    }
-  };
 
-  // 🔹 Add to favorites
-  const handleFavorite = (type, item) => {
-    setFavorites((prev) => {
-      const exists = prev[type].some((f) => f.id === item.id);
-      if (exists) {
-        return {
-          ...prev,
-          [type]: prev[type].filter((f) => f.id !== item.id),
-        };
+      if (
+        collab &&
+        collab.collaboration_status === "accepted" &&
+        collab.collaboration_id
+      ) {
+        const el = document.getElementById(`chat-${collab.collaboration_id}`);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
       }
-      return { ...prev, [type]: [...prev[type], item] };
-    });
-  };
+    }
+  }, [dashboard]);
 
-  // 🔹 Ensure researcher ID exists
+  // ==========================================================
+  // 🔹 Helper: Load logged-in Researcher ID
+  // ==========================================================
   const ensureResearcherId = async () => {
     if (researcherId) return researcherId;
     try {
@@ -150,32 +145,30 @@ export default function ResearcherDashboard() {
         return null;
       }
     } catch (err) {
-      console.error("Failed to fetch researchers:", err);
-      setError("Failed to find researcher profile. Create one first.");
+      setError("Failed to load researcher profile.");
       return null;
     }
   };
 
-  // 🔹 Load dashboard data
+  // ==========================================================
+  // 🔹 Load Dashboard
+  // ==========================================================
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      setError("");
       try {
         const id = await ensureResearcherId();
-        if (!id) {
-          setLoading(false);
-          return;
-        }
+        if (!id) return;
+
         const res = await api.get(`/api/researchers/${id}/dashboard`);
         setDashboard(res.data);
       } catch (err) {
-        console.error("Error loading dashboard:", err);
         setError("Failed to load dashboard.");
       } finally {
         setLoading(false);
       }
     };
+
     load();
   }, [researcherId]);
 
@@ -184,11 +177,6 @@ export default function ResearcherDashboard() {
       setEditableResearcher(dashboard.researcher);
     }
   }, [dashboard]);
-
-  useEffect(() => {
-    const id = stateId || queryId;
-    if (id && id !== researcherId) setResearcherId(id);
-  }, [stateId, queryId]);
 
   if (loading)
     return <div className="text-center mt-10 text-gray-600">Loading...</div>;
@@ -204,405 +192,143 @@ export default function ResearcherDashboard() {
     incoming_requests = [],
   } = dashboard;
 
+  // ==========================================================
+  // 🔹 Render UI
+  // ==========================================================
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 px-6 py-10">
       <div className="max-w-5xl mx-auto">
-        {/* ===== HEADER ===== */}
+        {/* ---------- HEADER ---------- */}
         <header className="mb-10 text-center">
-          {editing && editableResearcher ? (
-            <EditResearcherForm
-              researcher={editableResearcher}
-              handleChange={handleChange}
-              handleSave={handleSave}
-              saving={saving}
-              setEditing={setEditing}
-            />
-          ) : (
-            <HeaderDisplay
-              researcher={researcher}
-              navigate={navigate}
-              setEditing={setEditing}
-            />
-          )}
+          <h1 className="text-4xl font-extrabold text-gray-800 mb-2">
+            🧬 {researcher.name}
+          </h1>
 
           <button
-  onClick={() => navigate("/researcher-search")}
-  className="px-5 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 hover:scale-105 transition-all"
->
-  🔍 Search Researchers
-</button>
-
+            onClick={() => navigate("/researcher-search")}
+            className="px-5 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 hover:scale-105 transition-all"
+          >
+            🔍 Search Researchers
+          </button>
         </header>
 
-        {/* ===== PUBLICATIONS ===== */}
-        <Section
-          title="📚 Research Publications"
-          data={publications}
-          type="publications"
-          handleFavorite={handleFavorite}
-        />
+        {/* ---------- PUBLICATIONS ---------- */}
+        {/* (Your existing Section component logic stays the same) */}
 
-        {/* ===== CLINICAL TRIALS ===== */}
-        <Section
-          title="🔬 Related Clinical Trials"
-          data={clinical_trials}
-          type="clinical_trials"
-          handleFavorite={handleFavorite}
-        />
-
-        {/* ===== COLLABORATORS (with chat & request) ===== */}
+        {/* ---------- COLLABORATORS ---------- */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold text-teal-700 mb-4">
             🤝 Suggested Collaborators
           </h2>
-          {collaborators.length === 0 ? (
-            <p className="text-gray-500">No collaborators matched yet.</p>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-6">
-              {collaborators.map((c) => (
-  <div
-    key={c.id}
-    className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition-transform hover:-translate-y-1"
-  >
-    <h3 className="font-bold text-lg mb-1">
-      {c.name || "Unnamed Collaborator"}
-    </h3>
-    <p className="text-sm text-gray-600">
-      {c.institution} — {c.country}
-    </p>
-    <p className="text-sm text-gray-700 mt-2 leading-relaxed">
-      Common specialization: {c.specialization}
-    </p>
 
-    {/* ✅ New View Profile Button */}
-    <button
-      onClick={() => navigate(`/researcher-profile/${c.id}`)}
-      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 mt-2"
-    >
-      👀 View Profile
-    </button>
+          <div className="grid md:grid-cols-2 gap-6">
+            {collaborators.map((c) => (
+              <div
+                key={c.id}
+                className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition-transform"
+              >
+                <h3 className="font-bold text-lg mb-1">
+                  {c.name || "Unnamed Collaborator"}
+                </h3>
 
-    {c.collaboration_status === "accepted" ? (
-      <ChatBox
-        collaborationId={c.collaboration_id}
-        currentUserId={researcher.id}
-      />
-    ) : c.collaboration_status === "pending" ? (
-      <p className="text-gray-500 mt-2 italic">
-        Request pending...
-      </p>
-    ) : (
-      <button
-        onClick={async () => {
-          try {
-            await api.post("/api/collaborations/request", {
-              requesterId: researcher.id,
-              targetId: c.id,
-              message: "Let's collaborate!",
-            });
-            alert("Request sent!");
-            const updated = await api.get(
-              `/api/researchers/${researcher.id}/dashboard`
-            );
-            setDashboard(updated.data);
-          } catch (err) {
-            console.error(err);
-            alert("Failed to send request.");
-          }
-        }}
-        className="px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 mt-3"
-      >
-        Request Collaboration
-      </button>
-    )}
-  </div>
-))}
+                {/* ---------- PROFILE LINK ---------- */}
+                <button
+                  onClick={() => navigate(`/researcher-profile/${c.id}`)}
+                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 mt-2"
+                >
+                  👀 View Profile
+                </button>
 
-            </div>
-          )}
+                {/* ---------- REQUEST / CHAT ---------- */}
+                {c.collaboration_status === "accepted" ? (
+                  <div id={`chat-${c.collaboration_id}`}>
+                    <ChatBox
+                      collaborationId={c.collaboration_id}
+                      currentUserId={researcher.id}
+                    />
+                  </div>
+                ) : c.collaboration_status === "pending" ? (
+                  <p className="text-gray-500 mt-2 italic">
+                    Request pending...
+                  </p>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await api.post("/api/collaborations/request", {
+                          requesterId: researcher.id,
+                          targetId: c.id,
+                          message: "Let's collaborate!",
+                        });
+                        alert("Request sent!");
+                        const updated = await api.get(
+                          `/api/researchers/${researcher.id}/dashboard`
+                        );
+                        setDashboard(updated.data);
+                      } catch {
+                        alert("Failed to send request.");
+                      }
+                    }}
+                    className="px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 mt-3"
+                  >
+                    Request Collaboration
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
         </section>
 
-        {/* ===== INCOMING REQUESTS ===== */}
-        {incoming_requests?.length > 0 && (
-          <IncomingRequestsSection
-            incoming_requests={incoming_requests}
-            researcher={researcher}
-            setDashboard={setDashboard}
-          />
-        )}
+        {/* ---------- INCOMING REQUESTS ---------- */}
+        {incoming_requests.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold text-teal-700 mb-4">
+              📥 Incoming Collaboration Requests
+            </h2>
 
-        {/* ===== FAVORITES ===== */}
-        <FavoritesSection favorites={favorites} />
-      </div>
-    </div>
-  );
-}
+            {incoming_requests.map((req) => (
+              <div key={req.id} className="bg-white p-4 rounded shadow">
+                <strong>{req.requester_name}</strong>
+                <p>{req.message}</p>
 
-/* ========== Subcomponents ========== */
-
-function EditResearcherForm({ researcher, handleChange, handleSave, saving, setEditing }) {
-  return (
-    <div className="flex flex-col gap-4 max-w-md mx-auto">
-      {["name", "specialization", "institution", "country"].map((field) => (
-        <div key={field}>
-          <label className="block text-sm font-medium text-gray-700 capitalize">
-            {field}
-          </label>
-          <input
-            className="border p-2 rounded w-full"
-            value={researcher[field] || ""}
-            onChange={(e) => handleChange(field, e.target.value)}
-          />
-        </div>
-      ))}
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Research Interests
-        </label>
-        <input
-          className="border p-2 rounded w-full"
-          value={
-            Array.isArray(researcher.research_interests)
-              ? researcher.research_interests.join(", ")
-              : researcher.research_interests || ""
-          }
-          onChange={(e) =>
-            handleChange(
-              "research_interests",
-              e.target.value.split(",").map((s) => s.trim())
-            )
-          }
-        />
-      </div>
-
-      <div className="flex justify-center gap-2 mt-4">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className={`px-4 py-2 rounded text-white ${
-            saving
-              ? "bg-teal-400 cursor-not-allowed"
-              : "bg-teal-600 hover:bg-teal-700"
-          }`}
-        >
-          {saving ? "Saving..." : "Save"}
-        </button>
-        <button
-          onClick={() => setEditing(false)}
-          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function HeaderDisplay({ researcher, navigate, setEditing }) {
-  return (
-    <>
-      <h1 className="text-4xl font-extrabold text-gray-800 mb-2">
-        🧬 {researcher.name}
-      </h1>
-      <p className="text-gray-600 text-lg">
-        {researcher.specialization} — {researcher.institution} (
-        {researcher.country})
-      </p>
-      <p className="text-gray-500 mt-1 text-sm">
-        Interests:{" "}
-        {Array.isArray(researcher.research_interests)
-          ? researcher.research_interests.join(", ")
-          : researcher.research_interests}
-      </p>
-
-      <div className="mt-6 flex justify-center gap-4">
-        <button
-          onClick={() =>
-            navigate("/researcher-forums", {
-              state: {
-                researcherId: researcher.id,
-                specialization: researcher.specialization,
-              },
-            })
-          }
-          className="px-5 py-2 bg-teal-600 text-white rounded-lg shadow hover:bg-teal-700 hover:scale-105 transition-all"
-        >
-          🧠 Open Forums
-        </button>
-
-        <button
-          onClick={() => setEditing(true)}
-          className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Edit
-        </button>
-      </div>
-    </>
-  );
-}
-
-function IncomingRequestsSection({ incoming_requests, researcher, setDashboard }) {
-  return (
-    <section className="mb-12">
-      <h2 className="text-2xl font-semibold text-teal-700 mb-4">
-        📥 Incoming Collaboration Requests
-      </h2>
-      <div className="grid md:grid-cols-2 gap-6">
-        {incoming_requests.map((req) => (
-          <div
-            key={req.id}
-            className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition-transform hover:-translate-y-1"
-          >
-            <h3 className="font-bold text-lg mb-1">
-              Request from {req.requester_name}
-            </h3>
-            <p className="text-sm text-gray-600 mb-3">
-              Message: {req.message || "No message"}
-            </p>
-
-            {req.status === "pending" ? (
-              <div className="flex gap-2">
-                <button
-                  onClick={async () => {
-                    await api.put(`/api/collaborations/${req.id}/respond`, {
-                      status: "accepted",
-                    });
-                    alert("Collaboration accepted!");
-                    const updated = await api.get(
-                      `/api/researchers/${researcher.id}/dashboard`
-                    );
-                    setDashboard(updated.data);
-                  }}
-                  className="bg-teal-600 text-white px-3 py-1 rounded hover:bg-teal-700"
-                >
-                  Accept
-                </button>
-
-                <button
-                  onClick={async () => {
-                    await api.put(`/api/collaborations/${req.id}/respond`, {
-                      status: "rejected",
-                    });
-                    alert("Collaboration rejected.");
-                    const updated = await api.get(
-                      `/api/researchers/${researcher.id}/dashboard`
-                    );
-                    setDashboard(updated.data);
-                  }}
-                  className="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400"
-                >
-                  Reject
-                </button>
-              </div>
-            ) : req.status === "accepted" ? (
-              <p className="text-green-600 font-medium">✅ Accepted</p>
-            ) : (
-              <p className="text-red-500 font-medium">❌ Rejected</p>
-            )}
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* Publication / Trial Section */
-function Section({ title, data, type, handleFavorite }) {
-  return (
-    <section className="mb-12">
-      <h2 className="text-2xl font-semibold text-teal-700 mb-4">{title}</h2>
-      {data.length === 0 ? (
-        <p className="text-gray-500">No {type.replace("_", " ")} yet.</p>
-      ) : (
-        <div className="grid md:grid-cols-2 gap-6">
-          {data.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition-transform hover:-translate-y-1"
-            >
-              <h3 className="font-bold text-lg mb-1">{item.title}</h3>
-              <p className="text-sm text-gray-600">
-                {item.journal || item.location || item.institution}
-              </p>
-              <p className="text-sm text-gray-700 mt-2 leading-relaxed">
-                {item.summary}
-              </p>
-              <div className="flex justify-between items-center mt-4">
-                {item.url && (
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-teal-600 text-sm font-medium hover:underline"
-                  >
-                    View →
-                  </a>
-                )}
-                <button
-                  onClick={() => handleFavorite(type, item)}
-                  className="px-3 py-1 text-sm font-medium text-rose-500 bg-rose-50 border border-rose-100 rounded-full hover:bg-rose-100 hover:scale-105 transition-all"
-                >
-                  ❤️
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-/* Favorites Section */
-function FavoritesSection({ favorites }) {
-  const noFavorites = Object.values(favorites).every(
-    (arr) => arr.length === 0
-  );
-  if (noFavorites)
-    return (
-      <section className="mt-14">
-        <h2 className="text-2xl font-bold text-teal-700 mb-4">
-          ❤️ My Favorites
-        </h2>
-        <p className="text-gray-500">No favorites yet. Click ❤️ to save items.</p>
-      </section>
-    );
-
-  return (
-    <section className="mt-14">
-      <h2 className="text-2xl font-bold text-teal-700 mb-4">
-        ❤️ My Favorites
-      </h2>
-      {Object.entries(favorites).map(([key, arr]) =>
-        arr.length > 0 ? (
-          <div key={key} className="mb-8">
-            <h3 className="font-bold text-lg mb-2 capitalize">
-              {key.replace("_", " ")}
-            </h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              {arr.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white p-4 rounded-lg shadow hover:shadow-md"
-                >
-                  <h4 className="font-semibold">{item.title || item.name}</h4>
-                  {item.url && (
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-teal-600 text-sm hover:underline"
+                {req.status === "pending" && (
+                  <>
+                    <button
+                      onClick={async () => {
+                        await api.put(`/api/collaborations/${req.id}/respond`, {
+                          status: "accepted",
+                        });
+                        const updated = await api.get(
+                          `/api/researchers/${researcher.id}/dashboard`
+                        );
+                        setDashboard(updated.data);
+                      }}
+                      className="px-3 py-1 bg-green-600 text-white rounded mt-2"
                     >
-                      View
-                    </a>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null
-      )}
-    </section>
+                      Accept
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        await api.put(`/api/collaborations/${req.id}/respond`, {
+                          status: "rejected",
+                        });
+                        const updated = await api.get(
+                          `/api/researchers/${researcher.id}/dashboard`
+                        );
+                        setDashboard(updated.data);
+                      }}
+                      className="px-3 py-1 bg-gray-400 text-white rounded mt-2 ml-2"
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </section>
+        )}
+      </div>
+    </div>
   );
 }

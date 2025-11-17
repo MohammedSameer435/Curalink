@@ -75,6 +75,69 @@ export default function ResearcherProfile() {
             </button>
           )}
         </div>
+        {/* Collaborators - suggestions */}
+<h2 className="mt-10 text-xl font-semibold">🤝 Suggested Collaborators</h2>
+{profile.collaborators?.length === 0 ? (
+  <p>No collaborator suggestions.</p>
+) : (
+  profile.collaborators.map(c => (
+    <div key={c.id} className="border p-3 mt-3 rounded">
+      <h3 className="font-bold">{c.name}</h3>
+      <p>{c.institution} — {c.country}</p>
+
+      <button
+        onClick={() => navigate(`/researcher-profile/${c.id}`)}
+        className="bg-blue-500 text-white px-3 py-1 rounded mt-2"
+      >
+        👀 View Profile
+      </button>
+    </div>
+  ))
+)}
+{/* Incoming Collaboration Requests */}
+<h2 className="mt-10 text-xl font-semibold">📥 Incoming Requests</h2>
+{profile.incoming_requests?.length === 0 ? (
+  <p>No incoming requests.</p>
+) : (
+  profile.incoming_requests.map(req => (
+    <div key={req.id} className="border p-3 mt-3 rounded">
+      <p><strong>From:</strong> {req.requester_name}</p>
+      <p><strong>Message:</strong> {req.message}</p>
+
+      {req.status === "pending" && (
+        <div className="flex gap-2 mt-2">
+          <button
+            className="bg-green-600 text-white px-3 py-1 rounded"
+            onClick={async () => {
+              await api.put(`/api/collaborations/${req.id}/respond`, {
+                status: "accepted"
+              });
+              alert("Accepted!");
+              navigate(0);
+            }}
+          >
+            Accept
+          </button>
+
+          <button
+            className="bg-red-600 text-white px-3 py-1 rounded"
+            onClick={async () => {
+              await api.put(`/api/collaborations/${req.id}/respond`, {
+                status: "rejected"
+              });
+              alert("Rejected!");
+              navigate(0);
+            }}
+          >
+            Reject
+          </button>
+        </div>
+      )}
+    </div>
+  ))
+)}
+
+
 
         {/* Publications */}
         <h2 className="mt-10 text-xl font-semibold">📚 Publications</h2>
