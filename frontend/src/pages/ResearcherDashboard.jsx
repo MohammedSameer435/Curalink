@@ -13,10 +13,10 @@ function getQueryParam(search, key) {
   }
 }
 
-// 🔹 ChatBox Component
 function ChatBox({ collaborationId, currentUserId }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     const load = async () => {
@@ -29,6 +29,13 @@ function ChatBox({ collaborationId, currentUserId }) {
     };
     if (collaborationId) load();
   }, [collaborationId]);
+
+  // ✅ Auto scroll to bottom whenever messages update
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   const handleSend = async () => {
     if (!text.trim()) return;
@@ -50,16 +57,16 @@ function ChatBox({ collaborationId, currentUserId }) {
     <div className="mt-4 border-t pt-3">
       <h4 className="font-semibold text-gray-700 mb-2">💬 Chat</h4>
 
+      {/* ⭐ SCROLLABLE BOX WITH AUTO-SCROLL */}
       <div className="h-48 overflow-y-auto border p-2 mb-2 rounded bg-white">
-        {messages.length === 0 ? (
-          <p className="text-sm text-gray-500">No messages yet.</p>
-        ) : (
-          messages.map((m) => (
-            <div key={m.id} className="mb-1">
-              <strong>{m.sender_name || "You"}:</strong> {m.text}
-            </div>
-          ))
-        )}
+        {messages.map((m) => (
+          <div key={m.id} className="mb-1">
+            <strong>{m.sender_name || "You"}:</strong> {m.text}
+          </div>
+        ))}
+
+        {/* ⭐ This forces scroll to bottom */}
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="flex gap-2">
@@ -80,6 +87,7 @@ function ChatBox({ collaborationId, currentUserId }) {
     </div>
   );
 }
+
 
 export default function ResearcherDashboard() {
   const location = useLocation();
