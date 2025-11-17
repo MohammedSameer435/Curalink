@@ -109,12 +109,17 @@ export default function ResearcherProfile() {
           <button
             className="bg-green-600 text-white px-3 py-1 rounded"
             onClick={async () => {
-              await api.put(`/api/collaborations/${req.id}/respond`, {
-                status: "accepted"
-              });
-              alert("Accepted!");
-              navigate(0);
-            }}
+  await api.put(`/api/collaborations/${req.id}/respond`, {
+    status: "accepted"
+  });
+
+  alert("Accepted!");
+
+  // 🔄 Reload only the profile data, NOT the whole page
+  const res = await api.get(`/api/researchers/${id}/profile?viewer=${viewerId}`);
+  setProfile(res.data);
+}}
+
           >
             Accept
           </button>
@@ -122,12 +127,16 @@ export default function ResearcherProfile() {
           <button
             className="bg-red-600 text-white px-3 py-1 rounded"
             onClick={async () => {
-              await api.put(`/api/collaborations/${req.id}/respond`, {
-                status: "rejected"
-              });
-              alert("Rejected!");
-              navigate(0);
-            }}
+  await api.put(`/api/collaborations/${req.id}/respond`, {
+    status: "rejected"
+  });
+
+  alert("Rejected!");
+
+  const res = await api.get(`/api/researchers/${id}/profile?viewer=${viewerId}`);
+  setProfile(res.data);
+}}
+
           >
             Reject
           </button>
