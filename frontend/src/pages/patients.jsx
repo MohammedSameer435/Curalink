@@ -32,26 +32,39 @@ export default function PatientProfileSetup() {
   // AI ANALYSIS
   // ----------------------------------------------------
   const analyzeText = async () => {
-    if (!text.trim()) {
-      alert("Please enter some information before analysis.");
-      return;
+  if (!text.trim()) {
+    alert("Please enter some information before analysis.");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const res = await api.post("/api/ai/analyze", { text });
+
+    setAiResult(res.data);
+
+    // ✅ AUTO-FILL logic — put it RIGHT HERE
+    if (res.data.name && res.data.name !== "Unknown") {
+      setPatientName(res.data.name);
     }
 
-    setLoading(true);
-    try {
-      const res = await api.post("/api/ai/analyze", { text });
-      setAiResult(res.data);
+    if (res.data.condition && res.data.condition !== "Unknown") {
       setSelectedCondition(res.data.condition);
-      setSelectedCountry(res.data.country || "");
-    } catch (err) {
-      console.error("AI error:", err);
-      alert(
-        "AI analysis failed. You can still select your condition and country manually."
-      );
-    } finally {
-      setLoading(false);
     }
-  };
+
+    if (res.data.country && res.data.country !== "Global") {
+      setSelectedCountry(res.data.country);
+    }
+
+  } catch (err) {
+    console.error("AI error:", err);
+    alert(
+      "AI analysis failed. You can still select your condition and country manually."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ----------------------------------------------------
   // SUBMIT
@@ -139,52 +152,64 @@ export default function PatientProfileSetup() {
         )}
       </div>
 
-      {/* -------------------------------------------------- */}
       {/* MANUAL INPUT */}
-      {/* -------------------------------------------------- */}
-      <div className="w-full sm:w-96 bg-white border p-5 rounded-xl shadow">
-        <h2 className="text-xl font-semibold mb-3">Manual Input</h2>
+<div className="w-full sm:w-96 bg-white border p-5 rounded-xl shadow">
 
-        <label className="block font-semibold mb-2">
-          Select or Update Condition
-        </label>
-        <select
-          className="w-full border px-3 py-2 rounded-lg"
-          value={selectedCondition}
-          onChange={(e) => setSelectedCondition(e.target.value)}
-        >
-          <option value="">-- Choose Condition --</option>
-          {conditions.map((c, i) => (
-            <option key={i} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+  <h2 className="text-xl font-semibold mb-3">Manual Input</h2>
 
-        <label className="block font-semibold mt-4 mb-2">Select Country</label>
-        <select
-          className="w-full border px-3 py-2 rounded-lg"
-          value={selectedCountry}
-          onChange={(e) => setSelectedCountry(e.target.value)}
-          disabled={showAllExperts}
-        >
-          <option value="">-- Choose Country --</option>
-          {countries.map((c, i) => (
-            <option key={i} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+  {/* NAME */}
+  <label className="block font-semibold mb-2">Your Name</label>
+  <input
+    type="text"
+    className="w-full border px-3 py-2 rounded-lg"
+    placeholder="Enter your full name"
+    value={patientName}
+    onChange={(e) => setPatientName(e.target.value)}
+  />
 
-        <div className="mt-2 flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showAllExperts}
-            onChange={() => setShowAllExperts(!showAllExperts)}
-          />
-          <span>Show all experts (global)</span>
-        </div>
-      </div>
+  {/* CONDITION */}
+  <label className="block font-semibold mb-2 mt-4">
+    Select or Update Condition
+  </label>
+  <select
+    className="w-full border px-3 py-2 rounded-lg"
+    value={selectedCondition}
+    onChange={(e) => setSelectedCondition(e.target.value)}
+  >
+    <option value="">-- Choose Condition --</option>
+    {conditions.map((c, i) => (
+      <option key={i} value={c}>
+        {c}
+      </option>
+    ))}
+  </select>
+
+  {/* COUNTRY */}
+  <label className="block font-semibold mt-4 mb-2">Select Country</label>
+  <select
+    className="w-full border px-3 py-2 rounded-lg"
+    value={selectedCountry}
+    onChange={(e) => setSelectedCountry(e.target.value)}
+    disabled={showAllExperts}
+  >
+    <option value="">-- Choose Country --</option>
+    {countries.map((c, i) => (
+      <option key={i} value={c}>
+        {c}
+      </option>
+    ))}
+  </select>
+
+  <div className="mt-2 flex items-center gap-2">
+    <input
+      type="checkbox"
+      checked={showAllExperts}
+      onChange={() => setShowAllExperts(!showAllExperts)}
+    />
+    <span>Show all experts (global)</span>
+  </div>
+</div>
+
 
       {/* -------------------------------------------------- */}
       {/* SUBMIT BUTTON */}
