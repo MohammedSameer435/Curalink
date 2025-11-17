@@ -4,6 +4,8 @@ import api from "../api";
 
 export default function PatientProfileSetup() {
   const navigate = useNavigate();
+
+  const [patientName, setPatientName] = useState("");   // ✅ new
   const [text, setText] = useState("");
   const [aiResult, setAiResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -24,19 +26,17 @@ export default function PatientProfileSetup() {
     "Prostate Cancer",
   ];
 
-  const countries = [
-    "India",
-    "USA",
-    "UK",
-    "Germany",
-    "China"
-  ];
+  const countries = ["India", "USA", "UK", "Germany", "China"];
 
+  // ----------------------------------------------------
+  // AI ANALYSIS
+  // ----------------------------------------------------
   const analyzeText = async () => {
     if (!text.trim()) {
       alert("Please enter some information before analysis.");
       return;
     }
+
     setLoading(true);
     try {
       const res = await api.post("/api/ai/analyze", { text });
@@ -45,13 +45,23 @@ export default function PatientProfileSetup() {
       setSelectedCountry(res.data.country || "");
     } catch (err) {
       console.error("AI error:", err);
-      alert("AI analysis failed. You can still select your condition and country manually.");
+      alert(
+        "AI analysis failed. You can still select your condition and country manually."
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  // ----------------------------------------------------
+  // SUBMIT
+  // ----------------------------------------------------
   const handleSubmit = () => {
+    if (!patientName.trim()) {
+      alert("Please enter your name.");
+      return;
+    }
+
     const condition = selectedCondition.trim();
     const country = showAllExperts ? "" : selectedCountry.trim();
 
@@ -61,7 +71,11 @@ export default function PatientProfileSetup() {
     }
 
     navigate("/patient-dashboard", {
-      state: { condition, country },
+      state: {
+        name: patientName,      // ✅ passing patient name
+        condition,
+        country,
+      },
     });
   };
 
@@ -71,13 +85,31 @@ export default function PatientProfileSetup() {
       <p className="text-lg text-center max-w-2xl mb-6 text-gray-600">
         Help us understand your medical background so we can recommend relevant{" "}
         <strong>publications, health experts,</strong> and{" "}
-        <strong>clinical trials</strong> tailored to your needs. You can either
-        describe your condition in natural language or choose manually below.
+        <strong>clinical trials</strong> tailored to your needs.
       </p>
 
-      {/* Step 1: AI-based Natural Language Input */}
+      {/* -------------------------------------------------- */}
+      {/* NAME INPUT  */}
+      {/* -------------------------------------------------- */}
+      <div className="w-full sm:w-96 bg-white border p-5 rounded-xl shadow mb-6">
+        <h2 className="text-xl font-semibold mb-3">Your Details</h2>
+
+        <label className="block mb-2 font-semibold">Your Name</label>
+        <input
+          type="text"
+          className="w-full border px-3 py-2 rounded-lg"
+          placeholder="Enter your full name"
+          value={patientName}
+          onChange={(e) => setPatientName(e.target.value)}
+        />
+      </div>
+
+      {/* -------------------------------------------------- */}
+      {/* AI INPUT  */}
+      {/* -------------------------------------------------- */}
       <div className="w-full sm:w-96 bg-white border p-5 rounded-xl shadow mb-6">
         <h2 className="text-xl font-semibold mb-3">AI Assistant</h2>
+
         <textarea
           className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
           rows={4}
@@ -85,6 +117,7 @@ export default function PatientProfileSetup() {
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
+
         <button
           onClick={analyzeText}
           className="mt-4 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow"
@@ -95,23 +128,26 @@ export default function PatientProfileSetup() {
         {aiResult && (
           <div className="mt-4 bg-gray-50 p-3 rounded-lg border">
             <p className="font-medium text-gray-800">
-              ✅ Detected Condition: <span className="font-semibold">{aiResult.condition}</span>
+              ✅ Detected Condition:{" "}
+              <span className="font-semibold">{aiResult.condition}</span>
             </p>
             <p className="font-medium text-gray-800">
-              🌍 Detected Country: <span className="font-semibold">{aiResult.country}</span>
-            </p>
-            <p className="text-sm text-gray-600 mt-2">
-              Personalized results will be shown based on this condition and country.
+              🌍 Detected Country:{" "}
+              <span className="font-semibold">{aiResult.country}</span>
             </p>
           </div>
         )}
       </div>
 
-      {/* Step 2: Manual Input & Filters */}
+      {/* -------------------------------------------------- */}
+      {/* MANUAL INPUT */}
+      {/* -------------------------------------------------- */}
       <div className="w-full sm:w-96 bg-white border p-5 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-3">Manual Input</h2>
 
-        <label className="block font-semibold mb-2">Select or Update Condition</label>
+        <label className="block font-semibold mb-2">
+          Select or Update Condition
+        </label>
         <select
           className="w-full border px-3 py-2 rounded-lg"
           value={selectedCondition}
@@ -150,6 +186,9 @@ export default function PatientProfileSetup() {
         </div>
       </div>
 
+      {/* -------------------------------------------------- */}
+      {/* SUBMIT BUTTON */}
+      {/* -------------------------------------------------- */}
       <button
         onClick={handleSubmit}
         className="mt-8 py-4 px-10 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-md"
