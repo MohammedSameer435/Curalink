@@ -101,7 +101,21 @@ export default function PatientProfileSetup() {
         <strong>clinical trials</strong> tailored to your needs.
       </p>
 
-      
+      {/* -------------------------------------------------- */}
+      {/* NAME INPUT  */}
+      {/* -------------------------------------------------- */}
+      <div className="w-full sm:w-96 bg-white border p-5 rounded-xl shadow mb-6">
+        <h2 className="text-xl font-semibold mb-3">Your Details</h2>
+
+        <label className="block mb-2 font-semibold">Your Name</label>
+        <input
+          type="text"
+          className="w-full border px-3 py-2 rounded-lg"
+          placeholder="Enter your full name"
+          value={patientName}
+          onChange={(e) => setPatientName(e.target.value)}
+        />
+      </div>
 
       {/* -------------------------------------------------- */}
       {/* AI INPUT  */}
