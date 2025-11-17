@@ -63,7 +63,11 @@ export default function ResearcherProfile() {
                   message: "I'd like to collaborate with you!"
                 });
                 alert("Collaboration request sent!");
-                window.location.reload();
+                setProfile((prev) => ({
+                  ...prev,
+                  collaboration_status: "pending"
+                }));
+
               }}
               className="bg-teal-600 text-white px-4 py-2 rounded"
             >
